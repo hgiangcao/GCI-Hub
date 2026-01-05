@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GCI Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-light: #f4f7f6;
+            --primary-blue: #0d6efd;
+            --accent-orange: #ff7f50;
+            --text-dark: #2c3e50;
+            --card-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            --card-hover-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            --card-hover-bg: #e8f4ff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        /* Responsive 60% Container */
+        .narrow-container {
+            width: 100%;
+            padding-right: var(--bs-gutter-x, 0.75rem);
+            padding-left: var(--bs-gutter-x, 0.75rem);
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        @media (min-width: 992px) {
+            .narrow-container {
+                max-width: 60%;
+            }
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eef;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            text-align: center;
+        }
+
+        .lab-badge {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #198754;
+            padding: 3px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+
+        .section-header h3 {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin: 0;
+            padding-left: 10px;
+            border-left: 4px solid var(--accent-orange);
+        }
+
+        /* Card Styles */
+        .hub-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            padding: 20px 10px;
+            height: 100%;
+            transition: all 0.2s ease-in-out;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: block;
+            color: var(--text-dark);
+        }
+
+        .hub-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-hover-shadow);
+            color: var(--primary-blue);
+            background-color: var(--card-hover-bg);
+        }
+
+        .img-wrapper {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease;
+        }
+
+                /* Image/Icon Area */
+        .card-img-wrapper {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .card-img-top {
+            max-height: 55px;
+            max-width: 80%;
+            object-fit: contain;
+        }
+
+        .hub-card:hover .img-wrapper {
+            transform: scale(1.1);
+        }
+
+        /* Icon sizing */
+        .hub-card i {
+            font-size: 40px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        footer {
+            margin-top: 40px;
+            border-top: 1px solid #e9ecef;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="hero-section">
+        <div class="narrow-container">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <img src="logo/GCILab_Logo.png" height="55" alt="GCI Logo">
+                <div class="text-start">
+                    <h2 class="fw-bold m-0 text-primary" style="font-size: 1.5rem;">GCI Hub</h2>
+                    <span class="lab-badge">Game, Control & Intelligence Lab</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="narrow-container">
+
+        <div class="section-header">
+            <h3>System & Tools</h3>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
+            <div class="col">
+                <a href="/exam" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-cloud-arrow-up text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Submission System</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/GCIOJ" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-code text-danger"></i>
+                    </div>
+                    <h5 class="card-title">GCIOJ Judge</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="democodes.php" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-brands fa-github text-dark"></i>
+                    </div>
+                    <h5 class="card-title">Demo Code</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="pyide.php" class="hub-card">
+                    <div class="img-wrapper">
+                       <img class="card-img-top" src="logo/ide.png" >
+                    </div>
+                    <h5 class="card-title">Online Python IDE</h5>
+                </a>
+            </div>
+        </div>
+
+        <hr>
+        <div class="section-header">
+            <h3>Fall Semester (1)</h3>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
+            <div class="col">
+                <a href="/app" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-laptop-code text-primary"></i>
+                    </div>
+                    <h5 class="card-title">[IAI] Advanced Python</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/ds" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-sitemap text-success"></i>
+                    </div>
+                    <h5 class="card-title">[IAI] Data Structures</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/windes" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-regular fa-window-maximize text-info "></i>
+                    </div>
+                    <h5 class="card-title">[IAI] Windows Design APP</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/ai" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-computer text-danger"></i>
+                    </div>
+                    <h5 class="card-title">[BM] AI & Info Lab</h5>
+                </a>
+            </div>
+        </div>
+        <hr>
+        <div class="section-header">
+            <h3>Spring Semester (2)</h3>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+            <div class="col">
+                <a href="/algo" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-diagram-project text-success"></i>
+                    </div>
+                    <h5 class="card-title">[IAI] Algorithms</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/python" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-brands fa-python text-primary"></i>
+                    </div>
+                    <h5 class="card-title">[IAI] Basic Python</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/optim" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-gears text-danger"></i>
+                    </div>
+                    <h5 class="card-title">[IAI] Optimization</h5>
+                </a>
+            </div>
+            <div class="col">
+                <a href="/mc" class="hub-card">
+                    <div class="img-wrapper">
+                        <i class="fa-solid fa-cart-plus text-warning"></i>
+                    </div>
+                    <h5 class="card-title">[BM] M-Commerce</h5>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="text-center">
+        <small>chgiang © 2025</small>
+    </footer>
+
+</body>
+</html>
