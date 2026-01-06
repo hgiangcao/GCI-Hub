@@ -34,8 +34,9 @@ $problemLevel = $problem['level'];
 $problemInputType = isset($problem['input_type']) ? $problem['input_type'] : 'arg';
 
 // --- Load Files Server-Side ---
-$descPath = "problemset/" . $fileCode . ".html";
-$pyPath   = "problemset/" . $fileCode . ".py";
+$descPath = "problemset/".$fileCode."/" . $fileCode . ".html";
+$pyPath   = "problemset/".$fileCode."/"  . $fileCode . ".py";
+$templatePyPath   = "problemset/".$fileCode."/"  . $fileCode . "_Template.py";
 
 // Read Description
 if (file_exists($descPath)) {
@@ -43,6 +44,14 @@ if (file_exists($descPath)) {
 } else {
     $descContent = "<div class='text-brand-red p-4'>Description file (<b>$fileCode.html</b>) not found.</div>";
 }
+
+// Read Description
+if (file_exists($templatePyPath)) {
+    $templateContent = file_get_contents($templatePyPath);
+} else {
+    $templateContent = "def solve():";
+}
+
 
 // Read Python Grader Code
 if (file_exists($pyPath)) {
@@ -82,6 +91,8 @@ if (isset($_SESSION['student_id']) && $contestName) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -144,10 +155,16 @@ if (isset($_SESSION['student_id']) && $contestName) {
                    Reset Code
                 </button>
 
-                <button id="btn-run" onclick="runCode()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-orange-500/20">
+                <button id="btn-run" onclick="runCode()" class="bg-brand-green hover:bg-green-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-green-500/20">
                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                   Run & Submit
+                   Run
                 </button>
+
+
+                <button id="btn-run" onclick="submitCode()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-orange-500/20">
+               <i class="fas fa-upload text-[10px]"></i>
+               Submit
+            </button>
             </div>
         </div>
 
@@ -181,11 +198,9 @@ if (isset($_SESSION['student_id']) && $contestName) {
     const submittedCode = <?= json_encode($submittedContent) ?>;
 
     // --- 2. DEFAULT CODE TEMPLATE ---
-    var default_code = `# Write your code for ${problemCode} here
-def solve(${problemInputType}):
-    # Your code goes here
-    return None
-`;
+    var default_code = <?php echo json_encode($templateContent ?? ""); ?>;
+
+    console.log(default_code);
 
     // --- 3. EDITOR SETUP ---
     var editor = ace.edit("editor");
@@ -211,27 +226,66 @@ def solve(${problemInputType}):
     // --- 6. GRADING & SUBMISSION LOGIC ---
     let outputBuffer = "";
 
-    function outf(text) {
-        outputBuffer += text;
-        var mypre = document.getElementById("output");
-        var span = document.createElement("span");
 
-        if (text.includes("Accepted") || text.includes("PASS")) { span.className = "skulpt-pass"; span.innerText = text; }
-        else if (text.includes("Wrong Answer") || text.includes("WRONG")) { span.className = "skulpt-fail"; span.innerText = text; }
-        else if (text.includes("Error") || text.includes("Exception")) { span.className = "skulpt-fail"; span.innerText = text; }
-        else if (text.includes("Final Score")) { span.className = "skulpt-header"; span.innerText = text; }
-        else { span.innerText = text; }
+function outf_std(text) {
+    outputBuffer += text;
+    var mypre = document.getElementById("output");
+    var span = document.createElement("span");
 
-        mypre.appendChild(span);
-        mypre.scrollTop = mypre.scrollHeight;
+    // --- Styling Logic ---
+    if (text.includes("Accepted") || text.includes("PASS")) {
+        span.className = "skulpt-pass";
+    } else if (text.includes("Wrong Answer") || text.includes("WRONG") || text.includes("Error") || text.includes("Exception")) {
+        span.className = "skulpt-fail";
+    } else if (text.includes("Final Score")) {
+        span.className = "skulpt-header";
     }
+
+    span.innerText = text;
+    mypre.appendChild(span);
+    mypre.scrollTop = mypre.scrollHeight;
+
+}
+
+function outf(text) {
+    // 1. Update the global buffer
+    outputBuffer += text;
+
+    // 2. Extract strictly the last 2 lines
+    // (trim() removes trailing empty lines so the result isn't just blank space)
+    var lines = outputBuffer.trim().split('\n');
+    var lastTwo = lines.slice(-2);
+
+    // 3. Clear the display
+    var mypre = document.getElementById("output");
+    mypre.innerHTML = '';
+
+    // 4. Re-render only those last 2 lines
+    lastTwo.forEach(function(line) {
+        if (!line) return; // Skip empty lines if necessary
+
+        var div = document.createElement("div"); // Use div for automatic line breaking
+        div.innerText = line;
+
+        // --- Re-apply Styling Logic to the Line ---
+        if (line.includes("Accepted") || line.includes("PASS")) {
+            div.className = "skulpt-pass";
+        } else if (line.includes("Wrong Answer") || line.includes("WRONG") || line.includes("Error") || line.includes("Exception")) {
+            div.className = "skulpt-fail";
+        } else if (line.includes("Final Score")) {
+            div.className = "skulpt-header";
+        }
+
+        mypre.appendChild(div);
+    });
+}
 
     function builtinRead(x) {
         if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) throw "File not found: '" + x + "'";
         return Sk.builtinFiles["files"][x];
     }
 
-    function runCode() {
+    function submitCode() {
         var studentCode = editor.getValue();
         var finalProgram = studentCode + "\n" + teacherCode;
 
@@ -264,6 +318,40 @@ def solve(${problemInputType}):
             btn.classList.remove("opacity-50");
         });
     }
+
+    function runCode() {
+            var studentCode = editor.getValue();
+            var finalProgram = studentCode ;
+
+            var mypre = document.getElementById("output");
+            mypre.innerHTML = '';
+            outputBuffer = "";
+
+            Sk.pre = "output";
+            Sk.configure({output:outf_std, read:builtinRead});
+
+            var btn = document.getElementById("btn-run");
+            var originalText = btn.innerHTML;
+            btn.innerHTML = "Running...";
+            btn.disabled = true;
+            btn.classList.add("opacity-50");
+
+            Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, finalProgram, true);
+            }).then(function(mod) {
+                console.log('Execution success');
+                submitResult(studentCode, outputBuffer);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.classList.remove("opacity-50");
+            }, function(err) {
+                outf_std("\nRuntime Error: " + err.toString());
+                submitResult(studentCode, outputBuffer + "\nRuntime Error: " + err.toString());
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.classList.remove("opacity-50");
+            });
+        }
 
     function submitResult(code, output) {
         if (!contestId) {

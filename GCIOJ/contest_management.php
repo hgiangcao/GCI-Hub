@@ -139,7 +139,7 @@ $allProblems = Problem::getAll();
                         <?= $editMode ? 'Edit Contest' : 'Create New Contest' ?>
                     </h2>
 
-                    <form method="POST" action="contestmanager.php">
+                    <form method="POST" action="contest_management.php">
                         <input type="hidden" name="save_contest" value="1">
                         <input type="hidden" name="contest_id" value="<?= $editMode ? $contestToEdit['id'] : '' ?>">
 
@@ -190,7 +190,7 @@ $allProblems = Problem::getAll();
                                 <?= $editMode ? 'UPDATE contest' : 'Create Contest' ?>
                             </button>
                             <?php if ($editMode): ?>
-                                <a href="ContestManager.php" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded transition">Cancel</a>
+                                <a href="contest_management.php" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded transition">Cancel</a>
                             <?php endif; ?>
                         </div>
                     </form>
@@ -198,7 +198,7 @@ $allProblems = Problem::getAll();
 
                 <div class="bg-dark-surface p-6 rounded-lg border border-gray-700 shadow-lg">
                     <h2 class="text-xl font-bold mb-4 text-white">Add Problem to Contest</h2>
-                    <form method="POST" action="contestmanager.php">
+                    <form method="POST" action="contest_management.php">
                         <input type="hidden" name="add_problem" value="1">
                         <div class="space-y-4">
 
@@ -268,8 +268,8 @@ $allProblems = Problem::getAll();
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right space-x-2">
-                                    <a href="ContestManager.php?edit_id=<?= $row['id'] ?>" class="text-brand-orange hover:text-white transition">Edit</a>
-                                    <form method="POST" action="contestmanager.php" class="inline-block" onsubmit="return confirm('Delete this contest?');">
+                                    <a href="contest_management.php?edit_id=<?= $row['id'] ?>" class="text-brand-orange hover:text-white transition">Edit</a>
+                                    <form method="POST" action="contest_management.php" class="inline-block" onsubmit="return confirm('Delete this contest?');">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="<?= $row['id'] ?>">
                                         <button type="submit" class="text-brand-red hover:text-red-400 transition ml-2">Delete</button>

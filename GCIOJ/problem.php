@@ -3,11 +3,32 @@ require_once 'db.php';
 
 class Problem {
     // Create
-    public static function create($code, $lc_id, $lc_link, $title, $desc, $level, $time, $memory, $tag) {
-        $sql = "INSERT INTO problem (code, Leetcode_ID, Leetcode_link, title, description, level, time_limit_ms, memory_limit_mb, tag)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+
+public static function create($code, $title, $level, $input_type, $leetcode_id, $leetcode_link, $output_type, $grading_type, $time_limit, $memory_limit, $tag) {
+
+
+        $sql = "INSERT INTO problem
+                (code, title, level, input_type, Leetcode_ID, Leetcode_link, output_type, grading_type, time_limit_ms, memory_limit_mb, tag)
+                VALUES
+                (:code, :title, :level, :input_type, :leetcode_id, :leetcode_link, :output_type, :grading_type, :time_limit, :memory_limit, :tag)";
+
         $stmt = DB::connect()->prepare($sql);
-        return $stmt->execute([$code, $lc_id, $lc_link, $title, $desc, $level, $time, $memory, $tag]);
+
+        return $stmt->execute([
+            ':code'          => $code,
+            ':title'         => $title,
+            ':level'         => $level,
+            ':input_type'    => $input_type,
+            ':leetcode_id'   => $leetcode_id,
+            ':leetcode_link' => $leetcode_link,
+            ':output_type'   => $output_type,
+            ':grading_type'  => $grading_type,
+            ':time_limit'    => $time_limit,
+            ':memory_limit'  => $memory_limit,
+            ':tag'           => $tag
+        ]);
     }
 
     // Read (All)
@@ -54,6 +75,10 @@ class Problem {
     // Count total problems (for calculating total pages)
     public static function count() {
         return DB::connect()->query("SELECT COUNT(*) FROM problem  WHERE code LIKE 'G%'")->fetchColumn();
+    }
+
+    public static function get_next_id() {
+        return DB::connect()->query("SELECT IFNULL(MAX(id), 0) + 1 as next_id FROM problem")->fetchColumn();
     }
 
     public static function getCountsByLevel() {

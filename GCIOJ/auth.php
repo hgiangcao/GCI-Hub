@@ -1,6 +1,8 @@
 <?php
 // auth.php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if user_id is missing from session
 if (!isset($_SESSION['student_id'])) {
