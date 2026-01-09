@@ -124,7 +124,7 @@ $allProblems = Problem::getAll();
                 <h1 class="text-3xl font-bold text-brand-orange">Contest Manager</h1>
                 <p class="text-dark-muted mt-1">Create contests, manage folders, and assign problems.</p>
             </div>
-            <a href="index.php" class="text-dark-muted hover:text-white">&larr; Back to Dashboard</a>
+            <a href="dashboard.php" class="text-dark-muted hover:text-white">&larr; Back to Dashboard</a>
         </div>
 
         <?php if ($message): ?> <div class="bg-green-900/50 text-green-300 p-4 rounded mb-6 border border-green-700"><?= $message ?></div> <?php endif; ?>
@@ -207,7 +207,7 @@ $allProblems = Problem::getAll();
                                 <select name="contest_name_link" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-white">
                                     <?php foreach ($contests as $c): ?>
                                         <option value="<?= htmlspecialchars($c['name']) ?>" <?= ($editMode && $contestToEdit['id'] == $c['id']) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($c['name']) ?>
+                                            <?= htmlspecialchars($c['name']) ?> -  <?= htmlspecialchars($c['course']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>

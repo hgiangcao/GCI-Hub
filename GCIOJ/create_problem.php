@@ -110,7 +110,7 @@ $error = "";
                 </h1>
                 <p class="text-dark-muted text-sm mt-1">Files will be generated in <code class="text-brand-orange">problemset/G<?= $nextIdStr ?>_XXXXXX/</code></p>
             </div>
-            <a href="index.php" class="text-sm text-dark-muted hover:text-white transition">Back to Dashboard</a>
+            <a href="dashboard.php" class="text-sm text-dark-muted hover:text-white transition">Back to Dashboard</a>
         </div>
 
         <?php if ($message): ?> <div class="bg-green-900/30 text-green-400 p-3 rounded mb-6 border border-green-800"><?= $message ?></div> <?php endif; ?>

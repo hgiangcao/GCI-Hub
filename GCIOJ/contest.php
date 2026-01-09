@@ -52,7 +52,10 @@ public static function getAll() {
         $stmt = DB::connect()->prepare($sql);
         $stmt->execute([$contestId]);
         return $stmt->fetchAll();
-    }    public static function getProblemsByName($contestName) {
+    }
+
+
+    public static function getProblemsByName($contestName) {
         $sql = "SELECT p.*, cp.problem_order
                 FROM problem p
                 JOIN contest_problem cp ON p.id = cp.problem_id

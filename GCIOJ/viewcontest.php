@@ -76,7 +76,7 @@ function getDifficultyColor($level) {
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <div class="flex items-center gap-3 mb-2">
-                        <h1 class="text-3xl font-bold text-white"><?= htmlspecialchars($contest['name']) ?></h1>
+                        <h1 class="text-3xl font-bold text-white"><?= htmlspecialchars($contest['name']) ?> - <?= htmlspecialchars($contest['course']) ?></h1>
                         <?php if($status == 'Active'): ?>
                             <span class="px-2 py-1 bg-green-900/50 text-brand-green border border-green-700 text-xs rounded font-bold uppercase tracking-wide animate-pulse">Active</span>
                         <?php else: ?>
@@ -97,13 +97,17 @@ function getDifficultyColor($level) {
                     <tr class="bg-gray-800 text-dark-muted text-xs uppercase border-b border-gray-700">
                         <th class="px-6 py-4 font-medium w-16">#</th>
                         <th class="px-6 py-4 font-medium">Problem Name</th>
-                        <th class="px-6 py-4 font-medium w-32 text-center">Difficulty</th>
-                        <th class="px-6 py-4 font-medium w-48 text-right">Status</th>
+                        <th class="px-6 py-4 font-medium w-32 text-center">Points</th>
+                        <th class="px-6 py-4 font-medium w-48 text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-700 text-sm">
-                    <?php if (count($problems) > 0): ?>
+                    <?php
+                        $n_problem = count($problems) ;
+                        $pts = round(100/$n_problem,2);
+                        if (count($problems) > 0): ?>
                         <?php foreach ($problems as $index => $row):
+                                $link_solve_problem =  ($row['output_type'] == 'screen') ? 'solve_problem_terminal.php' : 'solve_problem.php' ;
                                 // Check submission status using Integers (User ID and Contest ID)
                                 $isSubmitted = false;
                                 if (isset($_SESSION['user_id'])) {
@@ -117,24 +121,24 @@ function getDifficultyColor($level) {
                                    </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <a href="solve_problem.php?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
+                                     <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
                                        class="font-medium text-white group-hover:text-brand-orange transition text-lg block">
                                         <?= htmlspecialchars($row['title']) ?>
                                     </a>
                                 </td>
 
                                 <td class="px-6 py-4 text-center font-bold <?= getDifficultyColor($row['level']) ?>">
-                                    <?= htmlspecialchars($row['level']) ?>
+                                    <?= $pts ?>
                                 </td>
 
-                                <td class="px-6 py-4 text-right">
+                                <td class="px-6 py-4 text-center">
                                     <?php if ($isSubmitted): ?>
-                                        <a href="solve_problem.php?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
+                                        <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
                                            class="inline-block bg-green-900/30 border border-green-600 text-green-400 hover:bg-green-900/50 px-4 py-2 rounded text-xs font-bold transition">
                                             Submitted
                                         </a>
                                     <?php else: ?>
-                                        <a href="solve_problem.php?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
+                                        <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
                                            class="inline-block bg-red-900/30 border border-red-600 text-red-400 hover:bg-red-900/50 px-4 py-2 rounded text-xs font-bold transition">
                                             Not Submitted
                                         </a>
