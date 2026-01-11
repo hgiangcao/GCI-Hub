@@ -43,6 +43,13 @@ public static function getAll() {
         return $stmt->fetch();
     }
 
+        // Find contest by Name
+    public static function getByNameAndCourse($name,$course) {
+        $stmt = DB::connect()->prepare("SELECT * FROM contest WHERE name = ? AND course = ?");
+        $stmt->execute([$name,$course]);
+        return $stmt->fetch();
+    }
+
     public static function getProblems($contestId) {
         $sql = "SELECT p.*, cp.problem_order 
                 FROM problem p

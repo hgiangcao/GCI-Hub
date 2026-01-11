@@ -2,6 +2,8 @@
 // --- 1. CONTROLLER LOGIC ---
 session_start();
 require_once 'auth.php';
+
+require_once 'check_admin.php';
 require_once 'problem.php';
 
 global $pdo;

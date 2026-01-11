@@ -20,6 +20,7 @@ $problemCode  = $data['problem_code'];
 $contestName    = $data['contest_name'];
 $problemId  = $data['problem_id'];
 $contestId    = $data['contest_id'];
+$courseCode    = $data['course_code'];
 $pythonCode   = $data['code'];
 $outputLog    = $data['output'];
 
@@ -49,7 +50,7 @@ else if(preg_match('/Final Score:\s*(\d+)\s*\/\s*(\d+)/', $outputLog, $matches))
 // 4. Save File to: contest_upload/[ContestName]/[student_id]/[problem_code].py
 
 // Define Path
-$uploadDir = "contest_upload/" . $contestName . "/" . $studentId;
+$uploadDir = "contest_upload/" .$courseCode ."_". $contestName."/" . $studentId;
 
 // Create directory recursively if it doesn't exist
 if (!file_exists($uploadDir)) {
@@ -59,6 +60,9 @@ if (!file_exists($uploadDir)) {
 // Filename: FND_MAX.py
 $filename = $studentId."_".$problemCode . ".py";
 $filePath = $uploadDir . "/" . $filename;
+
+$pythonCode = preg_replace('/print\(""\)\n?/', '', $pythonCode);
+$pythonCode = preg_replace("/[\r\n]{3,}/", "\n", $pythonCode);
 
 file_put_contents($filePath,$pythonCode);
 

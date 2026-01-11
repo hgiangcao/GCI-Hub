@@ -2,6 +2,8 @@
 // --- 1. CONTROLLER ---
 session_start();
 require_once 'auth.php'; // Ensure admin is logged in
+
+require_once 'check_admin.php';
 require_once 'student.php';
 
 $message = "";

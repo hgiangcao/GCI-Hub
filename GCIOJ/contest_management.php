@@ -1,9 +1,12 @@
 <?php
 // --- 1. CONTROLLER LOGIC ---
 session_start();
-require_once 'auth.php'; 
+require_once 'auth.php';
+
+require_once 'check_admin.php';
 require_once 'contest.php';
 require_once 'problem.php';
+require_once 'course.php'; // <--- NEW: Import Course Model
 
 $message = "";
 $error = "";
@@ -12,7 +15,7 @@ $contestToEdit = null;
 
 // Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
+
     // A. DELETE
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
         if (Contest::delete($_POST['id'])) {
@@ -25,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // B. CREATE / UPDATE
     elseif (isset($_POST['save_contest'])) {
         $name = $_POST['name'];
-        $course = $_POST['course'];
+        $course = $_POST['course']; // Now receives selection from dropdown
         $start = $_POST['start_time'];
         $end = $_POST['end_time'];
         $isActive = isset($_POST['is_active']) ? 1 : 0;
@@ -49,9 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $targetDir = "contest_upload/" . $safeName;
 
                 if (!file_exists($targetDir)) {
-                    if (!mkdir($targetDir, 0777, true)) {
-                        $error = "Contest created, but failed to create upload folder.";
-                    }
+                    mkdir($targetDir, 0777, true);
                 }
             } else {
                 $error = "Failed to create contest.";
@@ -59,20 +60,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // C. ADD PROBLEM (Updated to use Name & Code)
+    // C. ADD PROBLEM
     elseif (isset($_POST['add_problem'])) {
-        $c_name = $_POST['contest_name_link']; // Now receiving Name
-        $p_code = $_POST['problem_code_link']; // Now receiving Code
+        $combined = $_POST['contest_name_link'];
+
+        // Split into variables
+        [$c_name, $course_code] = explode('+', $combined);
+        $p_code = $_POST['problem_code_link'];
         $order  = $_POST['problem_order'];
 
-        // 1. Find Contest ID by Name
-        $contestObj = Contest::getByName($c_name);
-        // 2. Find Problem ID by Code
+        $contestObj =$contest = Contest::getByNameAndCourse($c_name,$course_code);
         $problemObj = Problem::getByCode($p_code);
 
         if ($contestObj && $problemObj) {
             try {
-                // Link them using IDs
                 if (Contest::addProblem($contestObj['id'], $problemObj['id'], $order)) {
                     $message = "Problem '{$p_code}' added to contest '{$c_name}'.";
                 } else {
@@ -91,8 +92,10 @@ if (isset($_GET['edit_id'])) {
     if ($contestToEdit) $editMode = true;
 }
 
+// Fetch Data
 $contests = Contest::getAll();
 $allProblems = Problem::getAll();
+$availableCourses = Course::getAll(); // <--- NEW: Get data for dropdown
 ?>
 
 <!DOCTYPE html>
@@ -153,8 +156,19 @@ $allProblems = Problem::getAll();
 
                             <div>
                                 <label class="block text-sm text-dark-muted mb-1">Course / Class</label>
-                                <input type="text" name="course" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 focus:border-brand-orange outline-none text-white"
-                                       value="<?= $editMode ? htmlspecialchars($contestToEdit['course']) : '' ?>" placeholder="e.g. CS101">
+                                <select name="course" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-white focus:border-brand-orange outline-none">
+                                    <option value="">-- Select Course --</option>
+                                    <?php foreach ($availableCourses as $ac): ?>
+                                        <?php
+                                            // Assuming we store the Course Name in the contest table (based on previous schema)
+                                            $val = htmlspecialchars($ac['code']."_".$ac['year']);
+                                            $isSelected = ($editMode && $contestToEdit['course'] == $val) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?= $val ?>" <?= $isSelected ?>>
+                                            <?= htmlspecialchars($ac['code']) ?> (<?= $ac['year'] ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
 
                             <div class="grid grid-cols-2 gap-2">
@@ -206,7 +220,7 @@ $allProblems = Problem::getAll();
                                 <label class="block text-sm text-dark-muted mb-1">Select Contest</label>
                                 <select name="contest_name_link" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-white">
                                     <?php foreach ($contests as $c): ?>
-                                        <option value="<?= htmlspecialchars($c['name']) ?>" <?= ($editMode && $contestToEdit['id'] == $c['id']) ? 'selected' : '' ?>>
+                                        <option value="<?= htmlspecialchars($c['name']) ?>+<?= htmlspecialchars($c['course']) ?>" <?= ($editMode && $contestToEdit['id'] == $c['id']) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($c['name']) ?> -  <?= htmlspecialchars($c['course']) ?>
                                         </option>
                                     <?php endforeach; ?>

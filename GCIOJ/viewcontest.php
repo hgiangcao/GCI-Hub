@@ -10,9 +10,11 @@ if (!isset($_GET['name'])) {
 }
 
 $contestName = urldecode($_GET['name']);
+$courseName = urldecode($_GET['course']);
+
 
 // A. Fetch the Contest Details first (Needed for ID, Times, Active status)
-$contest = Contest::getByName($contestName);
+$contest = Contest::getByNameAndCourse($contestName,$courseName);
 
 if (!$contest) {
     include 'nav.php';
@@ -104,7 +106,11 @@ function getDifficultyColor($level) {
                 <tbody class="divide-y divide-gray-700 text-sm">
                     <?php
                         $n_problem = count($problems) ;
-                        $pts = round(100/$n_problem,2);
+                        if ($n_problem>0)
+                            $pts = round(100/$n_problem,2);
+                        else
+                            $pts = 0;
+
                         if (count($problems) > 0): ?>
                         <?php foreach ($problems as $index => $row):
                                 $link_solve_problem =  ($row['output_type'] == 'screen') ? 'solve_problem_terminal.php' : 'solve_problem.php' ;
@@ -121,7 +127,7 @@ function getDifficultyColor($level) {
                                    </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                     <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
+                                     <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>&course=<?= urlencode($courseName) ?>"
                                        class="font-medium text-white group-hover:text-brand-orange transition text-lg block">
                                         <?= htmlspecialchars($row['title']) ?>
                                     </a>
@@ -133,12 +139,12 @@ function getDifficultyColor($level) {
 
                                 <td class="px-6 py-4 text-center">
                                     <?php if ($isSubmitted): ?>
-                                        <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
+                                        <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>&course=<?= urlencode($courseName) ?>"
                                            class="inline-block bg-green-900/30 border border-green-600 text-green-400 hover:bg-green-900/50 px-4 py-2 rounded text-xs font-bold transition">
                                             Submitted
                                         </a>
                                     <?php else: ?>
-                                        <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>"
+                                        <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>&course=<?= urlencode($courseName) ?>"
                                            class="inline-block bg-red-900/30 border border-red-600 text-red-400 hover:bg-red-900/50 px-4 py-2 rounded text-xs font-bold transition">
                                             Not Submitted
                                         </a>

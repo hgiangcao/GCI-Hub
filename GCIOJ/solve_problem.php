@@ -12,6 +12,9 @@ if (!isset($_GET['code'])) {
 $problemCode = $_GET['code'];
 $problem = Problem::getByCode($problemCode);
 
+
+$courseCode = $_GET['course'];
+
 if (!$problem) {
     die("Error: Problem code '{$problemCode}' not found.");
 }
@@ -22,7 +25,7 @@ $contestName = isset($_GET['contest']) ? urldecode($_GET['contest']) : null;
 $contestId = null;
 
 if ($contestName) {
-    $contestObj = Contest::getByName($contestName);
+    $contestObj = Contest::getByNameAndCourse($contestName,$courseCode);
     if ($contestObj) $contestId = $contestObj['id'];
 }
 
@@ -72,7 +75,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     $safeStudent = preg_replace('/[^a-zA-Z0-9_\-]/', '', $studentId);
 
     // Path: contest_upload/[ContestName]/[StudentID]/[ProblemCode].py
-    $pySubmittedPath = "contest_upload/" . $safeContest . "/" . $safeStudent . "/" . $safeStudent ."_". $fileCode . ".py";
+    $pySubmittedPath = "contest_upload/" .$courseCode ."_". $safeContest . "/" . $safeStudent . "/" . $safeStudent ."_". $fileCode . ".py";
 
     if (file_exists($pySubmittedPath)) {
         $submittedContent = file_get_contents($pySubmittedPath);
@@ -130,7 +133,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     <div id="problem-panel" class="bg-dark-surface border-r border-gray-700 flex flex-col w-[35%] min-w-[250px]">
         <div class="px-5 py-3 border-b border-gray-700 flex justify-between items-center bg-dark-surface shrink-0">
             <?php if($contestName): ?>
-                <a href="viewcontest.php?name=<?= urlencode($contestName) ?>" class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Contest</a>
+            <a href="viewcontest.php?name=<?= urlencode($contestName) ?>&course=<?= urlencode($courseCode) ?>"  class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Contest</a>
             <?php else: ?>
                 <a href="problemset.php" class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Problems</a>
             <?php endif; ?>
@@ -192,6 +195,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     const problemId = <?= json_encode($problemId) ?>;
     const problemInputType = <?= json_encode($problemInputType) ?>;
     const contestId = <?= json_encode($contestId) ?>;
+    const courseCode = <?= json_encode($courseCode) ?>;
     const contestName = <?= json_encode($contestName) ?>;
 
     // NEW: Previous submission content from PHP
@@ -358,7 +362,6 @@ function outf(text) {
             console.log("Practice mode: Result not saved to DB.");
             return;
         }
-
         fetch('submit.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -367,6 +370,7 @@ function outf(text) {
                 output: output,
                 problem_code: problemCode,
                 contest_id: contestId,
+                course_code: courseCode,
                 problem_id: problemId,
                 contest_name: contestName
             })

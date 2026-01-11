@@ -2,6 +2,8 @@
 // raw_submissions.php
 session_start();
 require_once 'auth.php'; // Optional: Remove if you want it public
+
+require_once 'check_admin.php';
 require_once 'db.php';
 
 // Fetch RAW data directly using PDO (bypassing Model logic to see everything)
