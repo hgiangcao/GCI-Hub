@@ -12,16 +12,20 @@ if (!isset($_GET['code'])) {
 $problemCode = $_GET['code'];
 $problem = Problem::getByCode($problemCode);
 
+
+$courseCode = $_GET['course'];
+
 if (!$problem) {
     die("Error: Problem code '{$problemCode}' not found.");
 }
 
-// Get Contest Context
+// Get Contest Context (Optional but recommended)
 $contestName = isset($_GET['contest']) ? urldecode($_GET['contest']) : null;
+
 $contestId = null;
 
 if ($contestName) {
-    $contestObj = Contest::getByName($contestName);
+    $contestObj = Contest::getByNameAndCourse($contestName,$courseCode);
     if ($contestObj) $contestId = $contestObj['id'];
 }
 
@@ -32,71 +36,10 @@ $problemTitle = $problem['title'];
 $problemLevel = $problem['level'];
 $problemInputType = isset($problem['input_type']) ? $problem['input_type'] : 'arg';
 
-// --- PATH CONSTRUCTION LOGIC (Shared for Saving & Loading) ---
-$targetPath = "";
-$uploadDir = "";
-$studentId = isset($_SESSION['student_id']) ? $_SESSION['student_id'] : null;
-
-if ($studentId && $contestName) {
-    // Sanitize names for folder structure
-    $safeContest = preg_replace('/[^a-zA-Z0-9_\- ]/', '', $contestName);
-    $safeContest = trim($safeContest);
-    $safeStudent = preg_replace('/[^a-zA-Z0-9_\-]/', '', $studentId);
-
-    // Structure: contest_upload / ContestName / StudentID / StudentID_ProblemCode.py
-    $uploadDir = "contest_upload/" . $safeContest . "/" . $safeStudent . "/";
-    $fileName = $safeStudent . "_" . $fileCode . ".py";
-    $targetPath = $uploadDir . $fileName;
-}
-
-// --- HANDLE SUBMISSION (AJAX POST) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Clear any previous output buffering
-    while (ob_get_level()) ob_end_clean();
-    header('Content-Type: application/json');
-
-    if (!$studentId) {
-        echo json_encode(['status' => 'error', 'message' => 'Not logged in.']);
-        exit;
-    }
-
-    if (!$targetPath) {
-        echo json_encode(['status' => 'error', 'message' => 'Contest context missing (cannot submit outside a contest).']);
-        exit;
-    }
-
-    // Get JSON input
-    $input = json_decode(file_get_contents('php://input'), true);
-    $code = isset($input['code']) ? $input['code'] : '';
-
-    if (trim($code) === '') {
-        echo json_encode(['status' => 'error', 'message' => 'Code cannot be empty.']);
-        exit;
-    }
-
-    // Create directory if it doesn't exist
-    if (!file_exists($uploadDir)) {
-        if (!mkdir($uploadDir, 0777, true)) {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to create directory on server.']);
-            exit;
-        }
-    }
-
-    // Save the file
-    if (file_put_contents($targetPath, $code) !== false) {
-        echo json_encode(['status' => 'success', 'message' => 'File saved successfully.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to write file to disk.']);
-    }
-    exit; // Stop execution so we don't return HTML
-}
-
-// --- Load Files Server-Side ---
 // --- Load Files Server-Side ---
 $descPath = "problemset/".$fileCode."/" . $fileCode . ".html";
 $pyPath   = "problemset/".$fileCode."/"  . $fileCode . ".py";
 $templatePyPath   = "problemset/".$fileCode."/"  . $fileCode . "_Template.py";
-
 
 // Read Description
 if (file_exists($descPath)) {
@@ -105,12 +48,13 @@ if (file_exists($descPath)) {
     $descContent = "<div class='text-brand-red p-4'>Description file (<b>$fileCode.html</b>) not found.</div>";
 }
 
-// Read template default code
+// Read Description
 if (file_exists($templatePyPath)) {
     $templateContent = file_get_contents($templatePyPath);
 } else {
     $templateContent = "def solve():";
 }
+
 
 // Read Python Grader Code
 if (file_exists($pyPath)) {
@@ -120,7 +64,7 @@ if (file_exists($pyPath)) {
 }
 
 // --- NEW LOGIC: Load Previous Submission ---
-$submittedContent = $templateContent; // Default empty
+$submittedContent = ""; // Default empty
 
 if (isset($_SESSION['student_id']) && $contestName) {
     $studentId = $_SESSION['student_id'];
@@ -131,13 +75,14 @@ if (isset($_SESSION['student_id']) && $contestName) {
     $safeStudent = preg_replace('/[^a-zA-Z0-9_\-]/', '', $studentId);
 
     // Path: contest_upload/[ContestName]/[StudentID]/[ProblemCode].py
-    $pySubmittedPath = "contest_upload/" . $safeContest . "/" . $safeStudent . "/" . $safeStudent ."_". $fileCode . ".py";
+    $pySubmittedPath = "contest_upload/" .$courseCode ."_". $safeContest . "/" . $safeStudent . "/" . $safeStudent ."_". $fileCode . ".py";
 
     if (file_exists($pySubmittedPath)) {
         $submittedContent = file_get_contents($pySubmittedPath);
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en" class="dark">
@@ -202,8 +147,8 @@ if (isset($_SESSION['student_id']) && $contestName) {
     <div id="problem-panel" class="bg-dark-surface border-r border-gray-700 flex flex-col w-[35%] min-w-[250px]">
         <div class="px-5 py-3 border-b border-gray-700 flex justify-between items-center bg-dark-surface shrink-0">
             <?php if($contestName): ?>
-                <a href="viewcontest.php?name=<?= urlencode($contestName) ?>" class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Contest</a>
-            <?php else: ?>
+           <a href="viewcontest.php?name=<?= urlencode($contestName) ?>&course=<?= urlencode($courseCode) ?>"  class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Contest</a>
+              <?php else: ?>
                 <a href="problemset.php" class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Problems</a>
             <?php endif; ?>
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium diff-<?= htmlspecialchars($problemLevel) ?>"><?= htmlspecialchars($problemLevel) ?></span>
@@ -257,12 +202,15 @@ if (isset($_SESSION['student_id']) && $contestName) {
 <script>
     // --- 1. VARIABLES FROM PHP ---
     const teacherCode = <?= json_encode($graderContent) ?>;
-    const submittedCode = <?= json_encode($submittedContent) ?>;
     const problemCode = <?= json_encode($fileCode) ?>;
     const problemId = <?= json_encode($problemId) ?>;
     const problemInputType = <?= json_encode($problemInputType) ?>;
     const contestId = <?= json_encode($contestId) ?>;
+    const courseCode = <?= json_encode($courseCode) ?>;
     const contestName = <?= json_encode($contestName) ?>;
+
+    // NEW: Previous submission content from PHP
+    const submittedCode = <?= json_encode($submittedContent) ?>;
 
     // --- 2. DEFAULT CODE TEMPLATE ---
     var default_code = <?php echo json_encode($templateContent ?? ""); ?>;
@@ -364,8 +312,9 @@ if (isset($_SESSION['student_id']) && $contestName) {
             mypre.innerHTML = '';
             outputBuffer = "";
 
-            Sk.pre = "output";
-            Sk.configure({output:outf_std, read:builtinRead});
+            Sk.pre = "terminal-container";
+            Sk.configure({ output: outf, read: builtinRead, inputfun: inputPlugin, inputfunTakesPrompt: true });
+
 
             var btn = document.getElementById("btn-run");
             var originalText = btn.innerHTML;
@@ -393,6 +342,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     // --- 5. RUN & SUBMIT LOGIC ---
     function runAndSubmit() {
         var studentCode = editor.getValue();
+        studentCode = studentCode.replace(/(.*input.*)/g, '$1\nprint("")');
 
         // 1. Indent every line of student code by 4 spaces
         var indentedCode = studentCode.split('\n').map(function(line){
@@ -467,7 +417,6 @@ if (isset($_SESSION['student_id']) && $contestName) {
             console.log("Practice mode: Result not saved to DB.");
             return;
         }
-
         fetch('submit.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -476,15 +425,16 @@ if (isset($_SESSION['student_id']) && $contestName) {
                 output: output,
                 problem_code: problemCode,
                 contest_id: contestId,
+                course_code: courseCode,
                 problem_id: problemId,
                 contest_name: contestName
             })
         })
         .then(response => response.json())
         .then(data => {
-            console.log("[DB Log] Saved:", data);
+            console.log("Saved to DB:", data);
         })
-        .catch((error) => { console.error('[DB Log] Error:', error); });
+        .catch((error) => { console.error('Error:', error); });
     }
 
     function focusInput() {

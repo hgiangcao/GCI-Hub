@@ -1,6 +1,7 @@
 <?php
 require_once 'auth.php';
-// Check admin permission here if needed
+require_once 'check_admin.php';
+
 ?>
 
 <!DOCTYPE html>
@@ -33,6 +34,7 @@ require_once 'auth.php';
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body class="bg-dark-bg text-dark-text font-sans min-h-screen flex flex-col">
 
@@ -78,7 +80,7 @@ require_once 'auth.php';
                 <h2 class="text-xl font-bold text-white mb-2">Manage Submissions</h2>
                 <p class="text-sm text-dark-muted">Review code, re-judge, detect plagiarism.</p>
             </a>
-
+<!--
             <a href="dashboard_contest.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-red transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/10 flex flex-col items-center justify-center text-center h-64">
                 <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-red-500/20 transition">
                     <svg class="w-8 h-8 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -86,6 +88,15 @@ require_once 'auth.php';
                 <h2 class="text-xl font-bold text-white mb-2">Live Dashboard</h2>
                 <p class="text-sm text-dark-muted">Real-time stats and contest monitoring.</p>
             </a>
+-->
+            <a href="course_management.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-red transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/10 flex flex-col items-center justify-center text-center h-64">
+                <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-red-500/20 transition">
+                    <svg class="w-8 h-8 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">Course Management</h2>
+                <p class="text-sm text-dark-muted">Manage Course.</p>
+            </a>
+
 
             <a href="class_list.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-cyan transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 flex flex-col items-center justify-center text-center h-64">
                 <div class="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-cyan-500/20 transition">
@@ -94,6 +105,16 @@ require_once 'auth.php';
                 <h2 class="text-xl font-bold text-white mb-2">Class Scoreboards</h2>
                 <p class="text-sm text-dark-muted">View rankings and grades for each class.</p>
             </a>
+
+
+
+        <a href="student_registration.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-cyan transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 flex flex-col items-center justify-center text-center h-64">
+            <div class="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-cyan-500/20 transition">
+                <i class="fa-solid fa-graduation-cap text-3xl text-brand-cyan"></i>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2">Add Student-Course</h2>
+            <p class="text-sm text-dark-muted">Registration Student to Course.</p>
+        </a>
 
         </div>
     </div>

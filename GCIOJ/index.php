@@ -66,8 +66,8 @@ function getStatusColor($status) {
 
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-2xl font-bold border-l-4 border-brand-orange pl-4">Contests</h1>
-            <?php if(isset($_SESSION['student_id']) && $_SESSION['student_id'] == 'admin'): ?>
-                <a href="contestmanager.php" class="text-sm bg-dark-surface border border-gray-600 px-3 py-1 rounded hover:bg-dark-hover">Manage Contests</a>
+            <?php if(isset($_SESSION['student_id']) && $_SESSION['student_id'] == 'chgiang'): ?>
+                <a href="dashboard.php" class="text-sm bg-blue-500 border border-gray-600 px-3 py-1 rounded hover:bg-dark-hover">ADMIN</a>
             <?php endif; ?>
         </div>
 
@@ -105,7 +105,7 @@ function getStatusColor($status) {
                                     <td class="px-6 py-4">
                                         <div class="font-bold text-white text-lg group-hover:text-brand-orange transition">
                                              <?php if ($status == 'Active'): ?>
-                                                <a href="viewcontest.php?name=<?= urlencode($row['name']) ?>">
+                                                <a href="viewcontest.php?name=<?= urlencode($row['name']) ?>&course=<?= urlencode($row['course']) ?>">
                                                     <?= htmlspecialchars($row['name']) ?>
                                                 </a>
                                             <?php else: ?>
@@ -128,7 +128,7 @@ function getStatusColor($status) {
                                         <?php if ($status == 'Inactive'): ?>
                                             <button disabled class="bg-gray-700 text-gray-400 px-4 py-2 rounded cursor-not-allowed opacity-50 text-xs font-bold uppercase">Expired</button>
                                         <?php else: ?>
-                                            <a href="viewcontest.php?name=<?= urlencode($row['name']) ?>"
+                                            <a href="viewcontest.php?name=<?= urlencode($row['name']) ?>&course=<?= urlencode($row['course']) ?>"
                                                class="bg-brand-green hover:bg-green-600 text-white font-bold px-4 py-2 rounded transition text-xs uppercase shadow-lg shadow-green-900/20">
                                                 Enter
                                             </a>

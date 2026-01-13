@@ -22,6 +22,7 @@
                         <a href="logout.php" class="text-brand-orange hover:text-white text-sm">Logout</a>
                     <?php else: ?>
                         <a href="login.php" class="text-dark-muted hover:text-white text-sm">Sign In</a>
+                        <a href="setup_password.php" class=" rounded bg-yellow-300 fw-bold text-red-500 hover:text-white text-md">Setup Password</a>
                     <?php endif; ?>
                 </div>
             </div>
