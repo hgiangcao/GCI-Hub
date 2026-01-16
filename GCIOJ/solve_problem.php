@@ -122,6 +122,10 @@ if (isset($_SESSION['student_id']) && $contestName) {
         .diff-Easy { color: #2cbb5d; background: rgba(44, 187, 93, 0.15); }
         .diff-Medium { color: #ffc01e; background: rgba(255, 192, 30, 0.15); }
         .diff-Hard { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+        code {
+    color: #00FFFF; /* Cyan */
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
     </style>
 </head>
 <body class="bg-dark-bg text-dark-text font-sans h-screen flex flex-col overflow-hidden">

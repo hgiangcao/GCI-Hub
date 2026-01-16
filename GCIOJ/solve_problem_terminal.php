@@ -136,6 +136,12 @@ if (isset($_SESSION['student_id']) && $contestName) {
             width: 60%;
             caret-color: #0f0;
         }
+
+        code {
+            color: #00FFFF; /* Cyan */
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
     </style>
 </head>
 <body class="bg-dark-bg text-dark-text font-sans h-screen flex flex-col overflow-hidden">
