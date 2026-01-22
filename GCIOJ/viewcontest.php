@@ -89,6 +89,9 @@ function getDifficultyColor($level) {
                         <span class="mr-4">📅 Start: <?= $contest['start_time'] ?></span>
                         <span>🏁 End: <?= $contest['end_time'] ?></span>
                     </p>
+                <p>
+                 <span><a href="standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>">Standings</a></span>
+                </p>
                 </div>
             </div>
         </div>
