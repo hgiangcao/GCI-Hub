@@ -1,6 +1,7 @@
 <?php
 
 include_once('db.php');
+require_once 'check_admin.php';
 
 $contestId = $_GET['contestID'] ?? 0;
 $courseName = $_GET['course'] ?? 0;
@@ -28,8 +29,6 @@ $stmt->execute([$contestId]);
 $problems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 2. Get Students (Fixed Duplicates)
-// We link contest -> course -> registration to ensure we only get students
-// registered for THIS contest's course.
 $stmt = $db->prepare("
     SELECT DISTINCT s.id, s.student_id, s.name
     FROM student s
@@ -42,23 +41,28 @@ $stmt = $db->prepare("
 $stmt->execute([$contestId]);
 $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Get Latest Submission Status Map (Fixed)
+// 3. Get Submission Counts & Solved Status
+// We aggregate by student/problem to get the count and check if ANY submission was accepted.
 $stmt = $db->prepare("
-    SELECT student_id, problem_id, status
+    SELECT
+        student_id,
+        problem_id,
+        COUNT(id) as sub_count,
+        MAX(CASE WHEN status = 'Accepted' THEN 1 ELSE 0 END) as is_solved
     FROM submission
-    WHERE id IN (
-        SELECT MAX(id)
-        FROM submission
-        WHERE contest_id = ?
-        GROUP BY student_id, problem_id
-    )
+    WHERE contest_id = ?
+    GROUP BY student_id, problem_id
 ");
 $stmt->execute([$contestId]);
-// Fetch and Map results for easy display
+
+// Map results: [student_id][problem_id] => ['count' => int, 'solved' => bool]
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $submissionMap = [];
 foreach ($rows as $row) {
-    $submissionMap[$row['student_id']][$row['problem_id']] = $row['status'];
+    $submissionMap[$row['student_id']][$row['problem_id']] = [
+        'count' => $row['sub_count'],
+        'solved' => ($row['is_solved'] == 1)
+    ];
 }
 
 // Helper: Get Letter A, B, C...
@@ -66,40 +70,18 @@ function getProblemLetter($index) {
     return chr(65 + $index);
 }
 
-// Helper: Status Styling
-function getStatusStyle($status) {
-    switch ($status) {
-        case 'Accepted':
-            return 'bg-green-900/30 text-green-400 border-green-900/50';
-        case 'Wrong Answer':
-            return 'bg-red-900/30 text-red-400 border-red-900/50';
-        case 'Compilation Error':
-        case 'Runtime Error':
-            return 'bg-yellow-900/30 text-yellow-400 border-yellow-900/50';
-        default:
-            return 'text-dark-muted'; // Not submitted
-    }
-}
-
-function getStatusIcon($status) {
-    if ($status === 'Accepted') return '✔';
-    if ($status === 'Wrong Answer') return '✘';
-    if ($status === 'Pending') return '...';
-    return '-';
-}
-
 // Helper: Calculate Total Solved for ranking
 function countSolved($studentId, $problems, $map) {
     $count = 0;
     foreach ($problems as $p) {
-        if (isset($map[$studentId][$p['id']]) && $map[$studentId][$p['id']] === 'Accepted') {
+        if (isset($map[$studentId][$p['id']]) && $map[$studentId][$p['id']]['solved']) {
             $count++;
         }
     }
     return $count;
 }
 
-// Optional: Sort students by solved count (Desc) then ID
+// Sort students by solved count (Desc) then ID
 usort($students, function($a, $b) use ($problems, $submissionMap) {
     $solvedA = countSolved($a['id'], $problems, $submissionMap);
     $solvedB = countSolved($b['id'], $problems, $submissionMap);
@@ -122,7 +104,7 @@ usort($students, function($a, $b) use ($problems, $submissionMap) {
                 extend: {
                     colors: {
                         dark: { bg: '#1a1a1a', surface: '#282828', hover: '#3e3e3e', text: '#eff1f6', muted: '#9ca3af' },
-                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444', yellow: '#ffc01e' }
+                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444' }
                     },
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['Roboto Mono', 'monospace'] }
                 }
@@ -191,14 +173,26 @@ usort($students, function($a, $b) use ($problems, $submissionMap) {
                             </td>
 
                             <?php foreach ($problems as $p):
-                                $status = $submissionMap[$s['id']][$p['id']] ?? null;
-                                $styleClass = getStatusStyle($status);
-                                $icon = getStatusIcon($status);
+                                $data = $submissionMap[$s['id']][$p['id']] ?? null;
+
+                                // Determine styling based on logic:
+                                // Accepted -> Green
+                                // Not Accepted but Submitted -> Red
+                                // No Submission -> Neutral
+                                if ($data) {
+                                    if ($data['solved']) {
+                                        $styleClass = 'bg-green-900/30 text-green-400 border-green-900/50';
+                                        $mark = '+';
+                                    } else {
+                                        $styleClass = 'bg-red-900/30 text-red-400 border-red-900/50';
+                                        $mark = '-';
+                                    }
+                                }
                             ?>
                                 <td class="px-2 py-3 text-center border-l border-gray-700/50">
-                                    <?php if ($status): ?>
-                                        <div class="inline-flex items-center justify-center w-8 h-8 rounded border <?= $styleClass ?> font-bold text-sm" title="<?= $status ?>">
-                                            <?= $icon ?>
+                                    <?php if ($data): ?>
+                                        <div class="inline-flex items-center justify-center w-8 h-8 rounded border <?= $styleClass ?> font-bold text-sm">
+                                            <?= $mark ?><?= $data['count'] ?>
                                         </div>
                                     <?php else: ?>
                                         <span class="text-dark-muted">-</span>

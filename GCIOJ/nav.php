@@ -8,7 +8,7 @@
                     <div class="hidden md:block">
                         <div class="flex items-baseline space-x-4"> 
                             <a href="index.php" class="bg-dark-hover text-white px-3 py-2 rounded-md text-sm font-medium transition">Contest</a>
-                            <a href="ranking.php" class="text-dark-text hover:bg-dark-hover px-3 py-2 rounded-md text-sm font-medium transition">Ranking</a>
+                            <!-- <a href="ranking.php" class="text-dark-text hover:bg-dark-hover px-3 py-2 rounded-md text-sm font-medium transition">Ranking</a>-->
                         </div>
                     </div>
                 </div>

@@ -82,8 +82,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="max-w-md w-full space-y-8 bg-dark-surface p-8 rounded-xl border border-gray-700 shadow-2xl">
 
             <div class="text-center">
-                <h2 class="mt-2 text-3xl font-bold tracking-tight text-brand-orange">&lt;/GCI Online Judge&gt; </h2>
-                <p class="mt-2 text-m text-white font-bold">Welcome back</p>
+                <h2 class="mt-2 text-3xl font-bold tracking-tight text-brand-orange">&lt;/&gt;GCI Online Judge </h2>
+                <p class="mt-2 text-m text-white font-bold">Welcome to GCIOJ</p>
             </div>
 
             <?php if($error): ?>
@@ -120,6 +120,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </button>
                 </div>
             </form>
+        <br>
+            <a href="setup_password.php" class=" rounded fw-bold text-ưhite-500 hover:text-red text-md">Setup Password (First time login?)</a>
 
         </div>
     </main>

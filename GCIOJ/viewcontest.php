@@ -121,6 +121,10 @@ function getDifficultyColor($level) {
                                 $isSubmitted = false;
                                 if (isset($_SESSION['user_id'])) {
                                     $isSubmitted = Submission::hasSubmitted($_SESSION['user_id'], $contest['id'] , $row['id']);
+                                    if ($isSubmitted)
+                                        $submissionStatus = Submission::getSubmissionStatus($_SESSION['user_id'], $contest['id'] , $row['id']);
+                                    else
+                                         $submissionStatus = "Not Submitted";
                                 }
                             ?>
                             <tr class="hover:bg-dark-hover transition group">
@@ -137,19 +141,28 @@ function getDifficultyColor($level) {
                                 </td>
 
                                 <td class="px-6 py-4 text-center font-bold <?= getDifficultyColor($row['level']) ?>">
-                                    <?= $pts ?>
+                                    <?php
+                                    if ($isSubmitted  == false)
+                                            echo "--/".$pts;
+                                    else if ($isSubmitted && strcmp($submissionStatus,"Accepted")==0)
+                                        echo $pts."/".$pts;
+                                    else
+                                            echo "0/".$pts;
+
+
+                                    ?>
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    <?php if ($isSubmitted): ?>
+                                    <?php if ($isSubmitted && strcmp($submissionStatus,"Accepted")==0): ?>
                                         <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>&course=<?= urlencode($courseName) ?>"
                                            class="inline-block bg-green-900/30 border border-green-600 text-green-400 hover:bg-green-900/50 px-4 py-2 rounded text-xs font-bold transition">
-                                            Submitted
+                                             <?= htmlspecialchars($submissionStatus) ?>
                                         </a>
                                     <?php else: ?>
                                         <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>&course=<?= urlencode($courseName) ?>"
                                            class="inline-block bg-red-900/30 border border-red-600 text-red-400 hover:bg-red-900/50 px-4 py-2 rounded text-xs font-bold transition">
-                                            Not Submitted
+                                             <?= htmlspecialchars($submissionStatus) ?>
                                         </a>
                                     <?php endif; ?>
                                 </td>

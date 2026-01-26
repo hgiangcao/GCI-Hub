@@ -96,6 +96,8 @@ if (isset($_SESSION['student_id']) && $contestName) {
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -118,6 +120,9 @@ if (isset($_SESSION['student_id']) && $contestName) {
         .diff-Easy { color: #2cbb5d; background: rgba(44, 187, 93, 0.15); }
         .diff-Medium { color: #ffc01e; background: rgba(255, 192, 30, 0.15); }
         .diff-Hard { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+        .skulpt-pass { color: #2cbb5d; font-weight: 600; }
+        .skulpt-fail { color: #ef4444; font-weight: 600; }
+        .skulpt-header { color: #9ca3af; margin-top: 10px; display: block; border-top: 1px solid #374151; padding-top: 10px;}
 
         /* Terminal Specific Styles */
         #terminal-container {
@@ -143,6 +148,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
         }
 
     </style>
+
 </head>
 <body class="bg-dark-bg text-dark-text font-sans h-screen flex flex-col overflow-hidden">
 
@@ -181,10 +187,10 @@ if (isset($_SESSION['student_id']) && $contestName) {
                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                    Run
                 </button>
-                <button id="btn-run" onclick="runAndSubmit()" class="bg-brand-blue hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-blue-500/20">
-                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                   Run & Submit
-                </button>
+                <button id="btn-run" onclick="runAndSubmit()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                   <i class="fas fa-upload text-[10px]"></i>
+               Submit
+            </button>
             </div>
         </div>
 
@@ -243,6 +249,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     // --- 4. TERMINAL OUTPUT LOGIC ---
     var terminal = document.getElementById("terminal-container");
     let outputBuffer = "";
+    let fullOutputBuffer = "";
 
     function outf_std(text) {
     outputBuffer += text;
@@ -252,7 +259,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     // --- Styling Logic ---
     if (text.includes("Accepted") || text.includes("PASS")) {
         span.className = "skulpt-pass";
-    } else if (text.includes("Wrong Answer") || text.includes("WRONG") || text.includes("Error") || text.includes("Exception")) {
+    } else if (text.includes("-")  || text.includes("Wrong Answer") || text.includes("WRONG") || text.includes("Error") || text.includes("Exception")) {
         span.className = "skulpt-fail";
     } else if (text.includes("Final Score")) {
         span.className = "skulpt-header";
@@ -266,17 +273,30 @@ if (isset($_SESSION['student_id']) && $contestName) {
 
     // Output function (Append text to terminal)
     function outf(text,type = "normal") {
+        outputBuffer = "";
+        fullOutputBuffer += text;
         outputBuffer += text;
-        var span = document.createElement("span");
+        var lines = outputBuffer.trim().split('\n');
 
-            if (type === "error") {
-            span.style.color = "red";
-            } else {
-                span.style.color = "limegreen"; // or "green"
+
+        // 4. Re-render only those last 2 lines
+        lines.forEach(function(line) {
+            if (!line) return; // Skip empty lines if necessary
+
+            var div = document.createElement("div"); // Use div for automatic line breaking
+            div.innerText = line;
+
+            // --- Re-apply Styling Logic to the Line ---
+            if (line.includes("Accepted") || line.includes("PASS")) {
+                div.className = "skulpt-pass";
+            } else if (line.includes("Wrong Answer") || line.includes("WRONG") || line.includes("Error") || line.includes("Exception")) {
+                div.className = "skulpt-fail";
+            } else if (line.includes("Final Score")) {
+                div.className = "skulpt-header";
             }
 
-        span.innerText = text;
-        terminal.appendChild(span);
+            terminal.appendChild(div);
+        });
         terminal.scrollTop = terminal.scrollHeight;
     }
 
@@ -376,12 +396,12 @@ if (isset($_SESSION['student_id']) && $contestName) {
 
             // --- AUTO SAVE & SUBMIT ON SUCCESS ---
             saveFileSilently(studentCode);
-            submitResult(studentCode, outputBuffer);
+            submitResult(studentCode, fullOutputBuffer);
 
             btn.innerHTML = originalText;
             btn.disabled = false;
         }, function(err) {
-            outf("\nTraceback (most recent call last):\n" + err.toString() + "\n","error");
+            outf("\nCompile Error\nTraceback (most recent call last):\n" + err.toString() + "\n","error");
 
             // --- AUTO SAVE & SUBMIT ON ERROR ---
             saveFileSilently(studentCode);

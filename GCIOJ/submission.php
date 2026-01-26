@@ -63,6 +63,18 @@ class Submission {
         return $stmt->fetchColumn() > 0;
     }
 
+    public static function getSubmissionStatus($studentId, $contestId, $problemId) {
+            $db = DB::connect();
+            $sql = "SELECT status FROM submission
+            WHERE student_id = ? AND contest_id = ? AND problem_id = ?
+            ORDER BY created_at DESC LIMIT 1";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$studentId, $contestId, $problemId]);
+
+            return $stmt->fetchColumn();
+        }
+
     // Get count of UNIQUE solved problems by level for a student
     public static function getSolvedStats($studentId) {
         $db = DB::connect();

@@ -28,47 +28,62 @@ def auto_grade():
     score = 0
     n_test = 1  # Reduced for speed
     
-    # Save the original Skulpt output handler (which sends to your JS outf function)
+    # Save original streams to restore later
     original_stdout = sys.stdout 
+    original_stdin = sys.stdin
 
-    
-        
-    # Calculate Expected Answer (e.g., Print Max)
+
     expected_str = teacher_solve()
 
-    # --- START CAPTURE ---
+    # B. Mock Environment
+    
+    # Capture sys.stdout so we can see what student prints
     catcher = OutputCatcher()
-    sys.stdout = catcher  # Hijack the print function
+    sys.stdout = catcher 
     
     try:
-        # Run Student Code (Assuming they print the result)
-        # You might need to pass arguments depending on the problem type
+        # Run the Student Code
         solve() 
     except Exception as e:
+        # Restore immediately on crash
         sys.stdout = original_stdout
-        print(f"Test 1 Failed: Runtime Error -> {e}")
-        return
+        sys.stdin = original_stdin
+        return # Stop grading
     
-    sys.stdout = original_stdout # Restore immediately
-    # --- END CAPTURE ---
+    # C. Restore Environment
+    sys.stdout = original_stdout
 
-    # Compare
-    student_str = catcher.getvalue().strip()
+    # D. Smart Output Parsing
+    # 1. Get raw output and remove trailing whitespace (newlines at end)
+    full_output = catcher.getvalue()
     
-    if is_match_string(student_str,expected_str):
+    # 2. Split into lines
+    all_lines = full_output.split('\n')
+    
+    # 3. Filter out empty lines (in case of print("") or extra newlines)
+    valid_lines = [line.strip() for line in all_lines if line.strip() != ""]
+    
+    # 4. Get the last valid line
+    last_line = valid_lines[-1] if valid_lines else ""
+    
+    if is_match_string(last_line,expected_str):
         score += 1
     else:
-        # Print specific mismatch info to help student debug
-        print(f"Test 1 Failed: Expected '{expected_str}', Got '{student_str}'")
+        wa_mess =  (f"-------------------------------\n")
+        wa_mess +=  (f"Example test failed:\n")
+        wa_mess += (f"   Expected:    Hello World!\n")
+        wa_mess += (f"   Your Output: {last_line}\n")
 
     # Final Result
     if score == n_test:
         print("Accepted")
+        print(f"Pass: {score}/{n_test} tests")
     else:
         print("Wrong Answer")
-        print(f"Final Score: {score}/{n_test}")
-
-# Run
+        print(f"Pass: {score}/{n_test} tests")
+        print(wa_mess)
+        
+# --- 4. Execution Entry Point ---
 if "solve" in globals():
     auto_grade()
 else:

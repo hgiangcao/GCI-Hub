@@ -233,6 +233,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
 
     // --- 6. GRADING & SUBMISSION LOGIC ---
     let outputBuffer = "";
+    let fullOutputBuffer = "";
 
 
 function outf_std(text) {
@@ -258,6 +259,7 @@ function outf_std(text) {
 function outf(text) {
     // 1. Update the global buffer
     outputBuffer += text;
+    fullOutputBuffer+= text;
 
     // 2. Extract strictly the last 2 lines
     // (trim() removes trailing empty lines so the result isn't just blank space)
@@ -269,7 +271,7 @@ function outf(text) {
     mypre.innerHTML = '';
 
     // 4. Re-render only those last 2 lines
-    lastTwo.forEach(function(line) {
+    lines.forEach(function(line) {
         if (!line) return; // Skip empty lines if necessary
 
         var div = document.createElement("div"); // Use div for automatic line breaking
@@ -314,13 +316,13 @@ function outf(text) {
             return Sk.importMainWithBody("<stdin>", false, finalProgram, true);
         }).then(function(mod) {
             console.log('Execution success');
-            submitResult(studentCode, outputBuffer);
+            submitResult(studentCode, fullOutputBuffer);
             btn.innerHTML = originalText;
             btn.disabled = false;
             btn.classList.remove("opacity-50");
         }, function(err) {
             outf("\nRuntime Error: " + err.toString());
-            submitResult(studentCode, outputBuffer + "\nRuntime Error: " + err.toString());
+            submitResult(studentCode, fullOutputBuffer + "\nRuntime Error: " + err.toString());
             btn.innerHTML = originalText;
             btn.disabled = false;
             btn.classList.remove("opacity-50");
@@ -348,13 +350,13 @@ function outf(text) {
                 return Sk.importMainWithBody("<stdin>", false, finalProgram, true);
             }).then(function(mod) {
                 console.log('Execution success');
-                submitResult(studentCode, outputBuffer);
+                submitResult(studentCode, fullOutputBuffer);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 btn.classList.remove("opacity-50");
             }, function(err) {
-                outf_std("\nRuntime Error: " + err.toString());
-                submitResult(studentCode, outputBuffer + "\nRuntime Error: " + err.toString());
+                outf_std("\nCompile Error\nRuntime Error: " + err.toString());
+                submitResult(studentCode, fullOutputBuffer + "\nCompile Error\nRuntime Error: " + err.toString());
                 btn.innerHTML = originalText;
                 btn.disabled = false;
                 btn.classList.remove("opacity-50");

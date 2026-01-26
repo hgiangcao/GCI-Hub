@@ -65,6 +65,15 @@ require_once 'check_admin.php';
                 <p class="text-sm text-dark-muted">Create problems, upload test cases.</p>
             </a>
 
+
+            <a href="list_problems.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-orange transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/10 flex flex-col items-center justify-center text-center h-64">
+                <div class="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-orange-500/20 transition">
+                    <svg class="w-8 h-8 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">List Problems</h2>
+                <p class="text-sm text-dark-muted">List all Problems</p>
+            </a>
+
             <a href="contest_management.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-green transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/10 flex flex-col items-center justify-center text-center h-64">
                 <div class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-green-500/20 transition">
                     <svg class="w-8 h-8 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>

@@ -103,18 +103,21 @@ def auto_grade():
         # This allows prompts like "The max is: 50" to pass if expected is "50"
         if is_close_value(expected_str,last_line):
             score += 1
-        # else:
-        #     print(f"Test {i} Failed.")
-        #     print(f"   Inputs: a={inputs[0]}, b={inputs[1]}")
-        #     print(f"   Expected: '{expected_str}'")
-        #     print(f"   Got: '{last_line}'")
+        else:
+            wa_mess =  (f"-------------------------------\n")
+            wa_mess +=  (f"Example test failed:\n")
+            wa_mess += (f"   Input: a = {inputs[0]}; b = {inputs[1]}\n")
+            wa_mess += (f"   Expected:    {expected_str}\n")
+            wa_mess += (f"   Your Output: {last_line}\n")
 
     # Final Result
     if score == n_test:
         print("Accepted")
+        print(f"Pass: {score}/{n_test} tests")
     else:
         print("Wrong Answer")
-        print(f"Final Score: {score}/{n_test}")
+        print(f"Pass: {score}/{n_test} tests")
+        print(wa_mess)
 
 # --- 4. Execution Entry Point ---
 if "solve" in globals():

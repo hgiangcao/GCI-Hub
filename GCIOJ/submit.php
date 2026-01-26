@@ -28,23 +28,16 @@ $outputLog    = $data['output'];
 $result = "Wrong Answer"; // Default
 $score = 0;
 
-// Logic: Check for Error first (Looking for common Skulpt error strings)
-if (strpos($outputLog, 'Runtime Error') !== false || strpos($outputLog, 'Compile Error') !== false || strpos($outputLog, 'Error:') !== false) {
-    $result = "Compile Error";
-    $score = 0;
-}
-else if (strpos($outputLog, 'Accepted') !== false ) {
+// Logic: Check Accepted -> Error -> Wrong
+if (strpos($outputLog, 'Accepted') !== false) {
     $result = "Accepted";
     $score = 100;
 }
-// Logic: Check for "Final Score: X/Y" (Standard Skulpt Grader Output)
-else if(preg_match('/Final Score:\s*(\d+)\s*\/\s*(\d+)/', $outputLog, $matches)) {
-    $earned = intval($matches[1]); // 4
-    $total  = intval($matches[2]); // 100
-
-    $score = $earned ;
+elseif (strpos($outputLog, 'Compile') !== false) {
+    $result = "Compile Error";
+}
+elseif (strpos($outputLog, 'Wrong') !== false) {
     $result = "Wrong Answer";
-
 }
 
 // 4. Save File to: contest_upload/[ContestName]/[student_id]/[problem_code].py
@@ -69,5 +62,5 @@ file_put_contents($filePath,$pythonCode);
 Submission::saveGraded($dbId , $contestId, $problemId, 'python', $result, $score);
 
 // Return JSON response
-echo json_encode(['status' => 'success', 'result' => $result, 'score' => $score]);
+echo json_encode(['status' => 'success', 'result' => $result, 'score' => $score, 'outputLog' => $outputLog]);
 ?>
