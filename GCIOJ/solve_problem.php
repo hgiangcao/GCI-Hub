@@ -142,7 +142,6 @@ if (isset($_SESSION['student_id']) && $contestName) {
             color: #0f0; /* Classic Green Terminal Text */
             background-color: #1e1e1e;
         }
-
     </style>
 
 

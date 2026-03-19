@@ -41,6 +41,7 @@ $fileCode = $problem['code'];
 $problemId= $problem['id'];
 $problemTitle = $problem['title'];
 $problemLevel = $problem['level'];
+$problemForbidden_keyword = $problem['forbidden_keyword'];
 $problemInputType = isset($problem['input_type']) ? $problem['input_type'] : 'arg';
 
 // --- Load Files Server-Side ---
@@ -289,6 +290,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     const contestId = <?= json_encode($contestId) ?>;
     const courseCode = <?= json_encode($courseCode) ?>;
     const contestName = <?= json_encode($contestName) ?>;
+    const forbidden = <?= json_encode($problemForbidden_keyword) ?> || "";
 
     // NEW: Previous submission content from PHP
     let submittedCode = <?= json_encode($submittedContent) ?>;
@@ -398,19 +400,29 @@ if (isset($_SESSION['student_id']) && $contestName) {
             terminal.scrollTop = terminal.scrollHeight;
         });
     }
+    function validateCode(code) {
+        // 1. Recursive check (if forbidden keywords exist)
+        if (forbidden.trim() !== "") {
+            const keywords = forbidden.split(',').map(s => s.trim()).filter(Boolean).join('|');
+            if (new RegExp(`\\b(${keywords})\\b`).test(code)) {
+                return "Error: you must use recursive function to solve this problem";
+            }
+        }
+        // 2. Built-in check
+        const forbiddenBuiltins = code.match(/\b(sum|min|max|sort|lambda|set|replace)\s*\(/);
+        if (forbiddenBuiltins) {
+            return `Error: Usage of built-in function '${forbiddenBuiltins[1]}()' is not allowed. Please implement the logic manually.`;
+        }
+        return null;
+    }
 
     function runCode() {
             var studentCode = editor.getValue();
-            
-            // Check for forbidden functions (sum, min, max followed by opening parenthesis)
-            var forbidden = studentCode.match(/\b(sum|min|max|sort|lamda|set|replace)\s*\(/);
+            var error = validateCode(studentCode);
     
-            if (forbidden) {
+            if (error) {
                 var mypre = document.getElementById("terminal-container");
-                // Print the error message directly to the output terminal
-                mypre.innerHTML = "Error: Usage of built-in function '" + forbidden[1] + "()' is not allowed. Please implement the logic manually.";
-                // CRITICAL: Return immediately to stop execution
-                //submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "Usage of built-in function");
+                mypre.innerHTML = `<div class="skulpt-fail">${error}</div>`;
                 return;
             }
             
@@ -453,18 +465,14 @@ if (isset($_SESSION['student_id']) && $contestName) {
         var orig_studentCode = editor.getValue();
         var studentCode = editor.getValue();
         
-         // Check for forbidden functions (sum, min, max followed by opening parenthesis)
-        var forbidden = studentCode.match(/\b(sum|min|max|sort|lamda|set|replace)\s*\(/);
-    
-            if (forbidden) {
-                var mypre = document.getElementById("terminal-container");
-                // Print the error message directly to the output terminal
-                mypre.innerHTML = "Error: Usage of built-in function '" + forbidden[1] + "()' is not allowed. Please implement the logic manually.";
-                // CRITICAL: Return immediately to stop execution
-                saveFileSilently(orig_studentCode);
-                submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "Usage of built-in function");
-                return;
-            }
+        var error = validateCode(studentCode);
+        if (error) {
+            var mypre = document.getElementById("terminal-container");
+            mypre.innerHTML = `<div class="skulpt-fail">${error}</div>`;
+            saveFileSilently(orig_studentCode);
+            submitResult(orig_studentCode, "\nCompile Error\nRuntime Error: " + error);
+            return;
+        }
         
         studentCode = studentCode.replace(/(.*input.*)/g, '$1\nprint("")');
         // This regex matches a variable name, '=', and a list structure '[...]'
