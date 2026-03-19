@@ -1,5 +1,0 @@
-
-
-def solve(arr):
-
-    return

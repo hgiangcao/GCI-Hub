@@ -1,18 +1,18 @@
 <?php
 // --- CONFIGURATION ---
 session_start();
-require_once 'auth.php';       // Verify Login
-require_once 'check_admin.php'; // Verify Admin Access
-require_once 'student.php'; // Verify Admin Access
-require_once 'course.php'; // Assumes Class Course exists with static CRUD methods
-
+require_once 'auth.php';
+require_once 'check_admin.php';
+require_once 'student.php';
+require_once 'course.php';
+require_once 'db.php';
 
 // Database Connection
 $host = 'localhost';
 $dbname = 'db_gcioj';
 $user = 'root';
 $pass = '';
-$pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$pdo = DB::connect();
 
 $message = "";
 $error = "";
@@ -20,45 +20,74 @@ $error = "";
 // --- HANDLE SUBMISSION ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $course_id = $_POST['course_id'];
-    $raw_ids = $_POST['student_ids'];
+    $raw_data = $_POST['student_data']; // Changed variable name
 
-    if (empty($course_id) || empty($raw_ids)) {
-        $error = "Please select a course and enter student IDs.";
+    if (empty($course_id) || empty($raw_data)) {
+        $error = "Please select a course and enter student data.";
     } else {
-        $student_codes = explode("\n", str_replace("\r", "", $raw_ids));
-        $success = 0;
-        $fail = 0;
+        $lines = explode("\n", str_replace("\r", "", $raw_data));
+        $created = 0;
+        $registered = 0;
+        $skipped = 0; // Already registered
 
-        // Prepare statements
-        $stmt_get_stu = $pdo->prepare("SELECT id FROM student WHERE student_id = ?"); // Assuming column is 'student_id' based on previous context
-        $stmt_register = $pdo->prepare("INSERT IGNORE INTO registration (student_id, course_id) VALUES (?, ?)");
+        // 1. Check if student exists (by external student_id)
+        $stmt_check = $pdo->prepare("SELECT id FROM student WHERE student_id = ?");
 
-        foreach ($student_codes as $code) {
-            $code = trim($code);
-            if (empty($code)) continue;
+        // 2. Create Student (Assuming DB column for name is 'name')
+        $stmt_create = $pdo->prepare("INSERT INTO student (student_id, name) VALUES (?, ?)");
 
-            // 1. Find Student Internal ID
-            $stmt_get_stu->execute([$code]);
-            $student = $stmt_get_stu->fetch();
+        // 3. Register to Course
+        $stmt_reg = $pdo->prepare("INSERT IGNORE INTO registration (student_id, course_id) VALUES (?, ?)");
 
-            if ($student) {
-                // 2. Register to Course
-                $stmt_register->execute([$student['id'], $course_id]);
-                if ($stmt_register->rowCount() > 0) {
-                    $success++;
+        $pdo->beginTransaction();
+
+        try {
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+
+                // Split string by comma or whitespace. Limit to 2 parts (ID, Name)
+                // Example: "U1001, 王小明" or "U1001 王小明"
+                $parts = preg_split('/[\s,]+/', $line, 2);
+
+                if (count($parts) < 2) continue; // Skip invalid lines
+
+                $sid = trim($parts[0]);
+                $name = trim($parts[1]);
+                $internal_id = null;
+
+                // A. Check Existence
+                $stmt_check->execute([$sid]);
+                $student = $stmt_check->fetch();
+
+                if ($student) {
+                    $internal_id = $student['id'];
                 } else {
-                    $fail++; // Already registered
+                    // B. Create New Student
+                    $stmt_create->execute([$sid, $name]);
+                    $internal_id = $pdo->lastInsertId();
+                    $created++;
                 }
-            } else {
-                $fail++; // Student ID not found
+
+                // C. Register to Course
+                $stmt_reg->execute([$internal_id, $course_id]);
+                if ($stmt_reg->rowCount() > 0) {
+                    $registered++;
+                } else {
+                    $skipped++;
+                }
             }
+            $pdo->commit();
+            $message = "Process Complete: Created $created new students. Registered $registered to course.";
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $error = "Database Error: " . $e->getMessage();
         }
-        $message = "Process complete: $success registered, $fail failed/skipped.";
     }
 }
 
 // --- FETCH COURSES ---
-$courses = $pdo->query("SELECT id, name,code,year, name FROM course ORDER BY year")->fetchAll();
+$courses = $pdo->query("SELECT id, code, year, name FROM course ORDER BY year DESC, code ASC")->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -102,21 +131,21 @@ $courses = $pdo->query("SELECT id, name,code,year, name FROM course ORDER BY yea
                         <option value="">-- Choose a Course --</option>
                         <?php foreach ($courses as $c): ?>
                             <option value="<?= $c['id'] ?>">
-                                <?= htmlspecialchars($c['code'] . " - " . $c['year']) ?>
+                                <?= htmlspecialchars($c['code'] . " - " . $c['name']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm text-gray-400 mb-2">Student IDs (One per line)</label>
-                    <textarea name="student_ids" rows="8" required placeholder="U1001&#10;U1002&#10;U1003"
+                    <label class="block text-sm text-gray-400 mb-2">Student Data</label>
+                    <textarea name="student_data" rows="8" required placeholder="U1001, 王小明&#10;U1002, 李四"
                               class="w-full bg-dark-input border border-gray-600 rounded p-2 text-white font-mono focus:border-brand-orange outline-none"></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Students must already exist in the system.</p>
+                    <p class="text-xs text-gray-500 mt-1">Format per line: <code>Student_ID, Name</code> (separated by comma or space)</p>
                 </div>
 
                 <button type="submit" class="w-full bg-brand-orange hover:bg-orange-600 text-white font-bold py-2 rounded transition">
-                    Register Students
+                    Register & Create Students
                 </button>
 
             </form>

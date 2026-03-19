@@ -5,11 +5,11 @@ class Submission {
 
     // --- NEW METHOD: Used by submit.php (Synchronous Grading) ---
     // Saves score immediately, does NOT save source_code
-    public static function saveGraded($student_id, $contest_id, $problem_id, $lang, $status, $score) {
-        $sql = "INSERT INTO submission (student_id, contest_id, problem_id, language, status, score, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, NOW())";
+    public static function saveGraded($student_id, $contest_id, $problem_id, $lang, $status, $score, $count_cheat = 0) {
+        $sql = "INSERT INTO submission (student_id, contest_id, problem_id, language, status, score, count_cheat, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
         $stmt = DB::connect()->prepare($sql);
-        $stmt->execute([$student_id, $contest_id, $problem_id, $lang, $status, $score]);
+        $stmt->execute([$student_id, $contest_id, $problem_id, $lang, $status, $score, $count_cheat]);
         return DB::connect()->lastInsertId();
     }
 
@@ -62,6 +62,18 @@ class Submission {
         $stmt->execute([$studentId, $contestId, $problemId]);
         return $stmt->fetchColumn() > 0;
     }
+
+    public static function getSubmissionStatus($studentId, $contestId, $problemId) {
+            $db = DB::connect();
+            $sql = "SELECT status FROM submission
+            WHERE student_id = ? AND contest_id = ? AND problem_id = ?
+            ORDER BY created_at DESC LIMIT 1";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$studentId, $contestId, $problemId]);
+
+            return $stmt->fetchColumn();
+        }
 
     // Get count of UNIQUE solved problems by level for a student
     public static function getSolvedStats($studentId) {

@@ -1,8 +1,9 @@
 <?php
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+
 // 1. Backend Logic
 require_once 'auth.php';    
 require_once 'problem.php';
@@ -30,10 +31,7 @@ $contestId = null;
 
 if ($contestName) {
     $contestObj = Contest::getByNameAndCourse($contestName,$courseCode);
-    if ($contestObj) {
-        $contestId = $contestObj['id'];
-        $antiCheatEnabled = isset($contestObj['anti_cheat']) ? (int)$contestObj['anti_cheat'] : 0;
-    }
+    if ($contestObj) $contestId = $contestObj['id'];
 }
 
 // Extract Data
@@ -41,6 +39,7 @@ $fileCode = $problem['code'];
 $problemId= $problem['id'];
 $problemTitle = $problem['title'];
 $problemLevel = $problem['level'];
+$problemForbidden_keyword = $problem['forbidden_keyword'];
 $problemInputType = isset($problem['input_type']) ? $problem['input_type'] : 'arg';
 
 // --- Load Files Server-Side ---
@@ -90,7 +89,6 @@ if (isset($_SESSION['student_id']) && $contestName) {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -113,7 +111,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
                 extend: {
                     colors: {
                         dark: { bg: '#1a1a1a', surface: '#282828', hover: '#3e3e3e', text: '#eff1f6', muted: '#9ca3af' },
-                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444', blue: '#3b82f6' }
+                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444' }
                     },
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['Roboto Mono', 'monospace'] }
                 }
@@ -124,63 +122,45 @@ if (isset($_SESSION['student_id']) && $contestName) {
         .resizer-vertical { width: 6px; background: #1a1a1a; cursor: col-resize; z-index: 10; border-left: 1px solid #374151; border-right: 1px solid #374151; }
         .resizer-horizontal { height: 6px; background: #1a1a1a; cursor: row-resize; z-index: 10; border-top: 1px solid #374151; border-bottom: 1px solid #374151; width: 100%; }
         .resizer-vertical:hover, .resizer-horizontal:hover { background: #ffa116; border-color: #ffa116; }
-        .diff-Easy { color: #2cbb5d; background: rgba(44, 187, 93, 0.15); }
-        .diff-Medium { color: #ffc01e; background: rgba(255, 192, 30, 0.15); }
-        .diff-Hard { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
         .skulpt-pass { color: #2cbb5d; font-weight: 600; }
         .skulpt-fail { color: #ef4444; font-weight: 600; }
         .skulpt-header { color: #9ca3af; margin-top: 10px; display: block; border-top: 1px solid #374151; padding-top: 10px;}
-
-        /* Terminal Specific Styles */
-        #terminal-container {
+        .diff-Easy { color: #2cbb5d; background: rgba(44, 187, 93, 0.15); }
+        .diff-Medium { color: #ffc01e; background: rgba(255, 192, 30, 0.15); }
+        .diff-Hard { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+        code {
+    color: #00FFFF; /* Cyan */
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+    #output {
             font-family: 'Courier New', monospace;
             font-size: 14px;
             color: #0f0; /* Classic Green Terminal Text */
             background-color: #1e1e1e;
         }
-        .term-input {
-            background: transparent;
-            border: none;
-            color: #fff;
-            outline: none;
-            font-family: inherit;
-            font-size: inherit;
-            width: 60%;
-            caret-color: #0f0;
-        }
-
-        code {
-            color: #00FFFF; /* Cyan */
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-        }
 
     </style>
+
 
 </head>
 <body class="bg-dark-bg text-dark-text font-sans h-screen flex flex-col overflow-hidden">
 
 <?php include_once 'nav.php'; ?>
-<?php if (isset($antiCheatEnabled) && $antiCheatEnabled): ?>
-<div class="bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-500 px-4 py-2 text-sm flex items-center justify-center gap-2 w-full">
-    <i class="fas fa-shield-alt"></i>
-    <span><strong>考試監控中 | 防作弊系統已啟動：</strong>測驗期間請勿切換分頁或離開瀏覽器，系統將全程監控異常行為。</span>
-</div>
-<?php endif; ?>
 
 <div class="flex flex-grow overflow-hidden relative w-full">
 
     <div id="problem-panel" class="bg-dark-surface border-r border-gray-700 flex flex-col w-[35%] min-w-[250px]">
         <div class="px-5 py-3 border-b border-gray-700 flex justify-between items-center bg-dark-surface shrink-0">
             <?php if($contestName): ?>
-           <a href="viewcontest.php?name=<?= urlencode($contestName) ?>&course=<?= urlencode($courseCode) ?>"  class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Contest</a>
-              <?php else: ?>
+            <a href="viewcontest.php?name=<?= urlencode($contestName) ?>&course=<?= urlencode($courseCode) ?>"  class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Contest</a>
+            <?php else: ?>
                 <a href="problemset.php" class="text-sm text-dark-muted hover:text-white flex items-center gap-1 transition">&larr; Problems</a>
             <?php endif; ?>
             <span class="px-2.5 py-0.5 rounded-full text-xs font-medium diff-<?= htmlspecialchars($problemLevel) ?>"><?= htmlspecialchars($problemLevel) ?></span>
         </div>
         <div id="problem-desc-container" class="flex-grow overflow-y-auto p-6 text-sm leading-relaxed space-y-4">
             <h1 class="text-2xl font-bold text-white mb-4"><?= htmlspecialchars($problemTitle) ?></h1>
-            <div class="prose prose-invert max-w-none text-dark-text text-lg select-none"><?= $descContent ?></div>
+            <div class="prose prose-invert max-w-none text-dark-text text-sm select-none"><?= $descContent ?></div>
         </div>
     </div>
 
@@ -189,24 +169,22 @@ if (isset($_SESSION['student_id']) && $contestName) {
     <div id="ide-container" class="flex-grow flex flex-col min-w-[400px] bg-dark-surface">
 
         <div class="h-12 border-b border-gray-700 flex justify-between items-center px-4 bg-dark-surface shrink-0">
-            <div class="font-mono text-sm text-dark-muted flex items-center gap-2">
-                <span>Python 3 (Terminal Mode)</span>
-                <span id="cheat-warning" class="hidden ml-3 bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-xs font-bold border border-red-500/50 flex items-center gap-1">
-                    <i class="fas fa-exclamation-triangle text-red-500"></i> 違規切換次數：<span id="cheat-count-display">0</span>
-                </span>
-            </div>
+            <div class="font-mono text-sm text-dark-muted flex items-center gap-2"><span>Python 3</span></div>
 
             <div class="flex gap-2">
                 <button onclick="resetCode()" class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-1.5 px-3 rounded transition flex items-center gap-2 border border-gray-600">
                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74-2.74L3 12"></path></svg>
-                   Reset
+                   Reset Code
                 </button>
+
                 <button id="btn-run" onclick="runCode()" class="bg-brand-green hover:bg-green-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-green-500/20">
                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                    Run
                 </button>
-                <button id="btn-run" onclick="runAndSubmit()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-blue-500/20">
-                   <i class="fas fa-upload text-[10px]"></i>
+
+
+                <button id="btn-run" onclick="submitCode()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-orange-500/20">
+               <i class="fas fa-upload text-[10px]"></i>
                Submit
             </button>
             </div>
@@ -220,67 +198,16 @@ if (isset($_SESSION['student_id']) && $contestName) {
 
         <div id="console-panel" class="flex-grow flex flex-col bg-dark-surface min-h-[100px]">
             <div class="flex border-b border-gray-700 bg-dark-hover/30 shrink-0">
-                <div class="px-4 py-2 text-xs font-medium text-white border-b-2 border-brand-green">Terminal</div>
+                <div class="px-4 py-2 text-xs font-medium text-white border-b-2 border-brand-orange">Terminal | Screen | Console Output</div>
             </div>
-            <div id="terminal-container" onclick="focusInput()" class="flex-grow p-4 font-mono text-xs overflow-y-auto whitespace-pre-wrap">
-                <span class="text-dark-muted">Ready to run... Click 'Run & Submit' to execute and save your code.</span>
+            <div id="output" class="flex-grow p-4 font-mono text-xs overflow-y-auto whitespace-pre-wrap text-dark-text bg-[#1e1e1e]">
+                <span class="text-dark-muted">Click 'Run' to see results...</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- 0. ANTI-CHEAT TRACKER ---
-    const isAntiCheatEnabled = <?= json_encode(isset($antiCheatEnabled) ? (bool)$antiCheatEnabled : false) ?>;
-    const isContestSession = <?= json_encode(isset($contestId) ? (bool)$contestId : false) ?>;
-    const LS_KEY = 'gcioj_cheat_count';
-    
-    let cheatCount = 0;
-    if (isContestSession) {
-        if (isAntiCheatEnabled) {
-            cheatCount = parseInt(localStorage.getItem(LS_KEY) || "0");
-        } else {
-            localStorage.removeItem(LS_KEY); // Reset when opening a non-anti-cheat contest
-        }
-    }
-
-    let isNavigating = false;
-    window.addEventListener('beforeunload', () => { isNavigating = true; });
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('a')) isNavigating = true;
-    });
-
-    let lastCheatTime = 0;
-    const cheatWarning = document.getElementById('cheat-warning');
-    const cheatCounter = document.getElementById('cheat-count-display');
-
-    // Init UI if count exists
-    if (cheatCount > 0 && isAntiCheatEnabled) {
-        if (cheatWarning) cheatWarning.classList.remove('hidden');
-        if (cheatCounter) cheatCounter.innerText = cheatCount;
-    }
-
-    function handleCheat() {
-        if (!isAntiCheatEnabled || isNavigating) return; // Only process if enabled and NOT during navigation
-
-        const now = Date.now();
-        if (now - lastCheatTime < 1000) return; 
-        lastCheatTime = now;
-        
-        cheatCount++;
-        localStorage.setItem(LS_KEY, cheatCount);
-        if (cheatWarning) cheatWarning.classList.remove('hidden');
-        if (cheatCounter) cheatCounter.innerText = cheatCount;
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) handleCheat();
-    });
-
-    window.addEventListener('blur', () => {
-        handleCheat();
-    });
-
     // --- 1. VARIABLES FROM PHP ---
     const teacherCode = <?= json_encode($graderContent) ?>;
     const problemCode = <?= json_encode($fileCode) ?>;
@@ -289,46 +216,51 @@ if (isset($_SESSION['student_id']) && $contestName) {
     const contestId = <?= json_encode($contestId) ?>;
     const courseCode = <?= json_encode($courseCode) ?>;
     const contestName = <?= json_encode($contestName) ?>;
+    const forbidenKeyword = <?= json_encode($problemForbidden_keyword) ?> || "";
 
     // NEW: Previous submission content from PHP
-    let submittedCode = <?= json_encode($submittedContent) ?>;
+    const submittedCode = <?= json_encode($submittedContent) ?>;
 
     // --- 2. DEFAULT CODE TEMPLATE ---
     var default_code = <?php echo json_encode($templateContent ?? ""); ?>;
+
+    console.log(default_code);
 
     // --- 3. EDITOR SETUP ---
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/twilight");
     editor.session.setMode("ace/mode/python");
-    editor.setFontSize(16);
+    editor.setFontSize(14);
     editor.setShowPrintMargin(false);
 
+    // --- 4. INIT EDITOR CONTENT ---
     if (submittedCode && submittedCode.trim() !== "") {
         editor.setValue(submittedCode, -1);
     } else {
         editor.setValue(default_code, -1);
     }
 
+    // --- 5. RESET FUNCTION ---
     function resetCode() {
-        if(confirm("Reset code to default?")) {
+        if(confirm("Are you sure you want to reset your code to default? Any unsaved changes will be lost.")) {
             editor.setValue(default_code, -1);
         }
     }
 
-    // --- 4. TERMINAL OUTPUT LOGIC ---
-    var terminal = document.getElementById("terminal-container");
+    // --- 6. GRADING & SUBMISSION LOGIC ---
     let outputBuffer = "";
     let fullOutputBuffer = "";
 
-    function outf_std(text) {
+
+function outf_std(text) {
     outputBuffer += text;
-    var mypre = document.getElementById("terminal-container");
+    var mypre = document.getElementById("output");
     var span = document.createElement("span");
 
     // --- Styling Logic ---
     if (text.includes("Accepted") || text.includes("PASS")) {
         span.className = "skulpt-pass";
-    } else if (text.includes("-")  || text.includes("Wrong Answer") || text.includes("WRONG") || text.includes("Error") || text.includes("Exception")) {
+    } else if (text.includes("Wrong Answer") || text.includes("WRONG") || text.includes("Error") || text.includes("Exception")) {
         span.className = "skulpt-fail";
     } else if (text.includes("Final Score")) {
         span.className = "skulpt-header";
@@ -339,8 +271,8 @@ if (isset($_SESSION['student_id']) && $contestName) {
     mypre.scrollTop = mypre.scrollHeight;
 
 }
-
-    // Output function (Append text to terminal)
+var terminal = document.getElementById("output");
+// Output function (Append text to terminal)
     function outf(text,type = "normal") {
         outputBuffer = "";
         fullOutputBuffer += text;
@@ -369,183 +301,155 @@ if (isset($_SESSION['student_id']) && $contestName) {
         terminal.scrollTop = terminal.scrollHeight;
     }
 
+
     function builtinRead(x) {
         if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) throw "File not found: '" + x + "'";
         return Sk.builtinFiles["files"][x];
     }
 
-    // Input Function (Simulates input())
-    function inputPlugin(prompt) {
-        return new Promise(function(resolve, reject) {
-            if (prompt) outf(prompt);
-
-            var input = document.createElement("input");
-            input.className = "term-input";
-            input.setAttribute("type", "text");
-
-            input.addEventListener("keydown", function(e) {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    var val = this.value;
-                    this.remove(); // Remove input field
-                    outf(val + "\n"); // Show what was typed
-                    resolve(val); // Send to Python
-                }
-            });
-
-            terminal.appendChild(input);
-            input.focus();
-            terminal.scrollTop = terminal.scrollHeight;
-        });
-    }
-
-    function runCode() {
-            var studentCode = editor.getValue();
-            
-            // Check for forbidden functions (sum, min, max followed by opening parenthesis)
-            var forbidden = studentCode.match(/\b(sum|min|max|sort|lamda|set|replace)\s*\(/);
-    
-            if (forbidden) {
-                var mypre = document.getElementById("terminal-container");
-                // Print the error message directly to the output terminal
-                mypre.innerHTML = "Error: Usage of built-in function '" + forbidden[1] + "()' is not allowed. Please implement the logic manually.";
-                // CRITICAL: Return immediately to stop execution
-                //submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "Usage of built-in function");
-                return;
-            }
-            
-            
-            var finalProgram = studentCode ;
-
-            var mypre = document.getElementById("terminal-container");
-            mypre.innerHTML = '';
-            outputBuffer = "";
-
-            Sk.pre = "terminal-container";
-            Sk.configure({ output: outf, read: builtinRead, inputfun: inputPlugin, inputfunTakesPrompt: true });
-
-
-            var btn = document.getElementById("btn-run");
-            var originalText = btn.innerHTML;
-            btn.innerHTML = "Running...";
-            btn.disabled = true;
-            btn.classList.add("opacity-50");
-
-            Sk.misceval.asyncToPromise(function() {
-                return Sk.importMainWithBody("<stdin>", false, finalProgram, true);
-            }).then(function(mod) {
-                console.log('Execution success');
-                //submitResult(studentCode, outputBuffer);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                btn.classList.remove("opacity-50");
-            }, function(err) {
-                outf_std("\nRuntime Error: " + err.toString());
-                //submitResult(studentCode, outputBuffer + "\nRuntime Error: " + err.toString());
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                btn.classList.remove("opacity-50");
-            });
-        }
-
-    // --- 5. RUN & SUBMIT LOGIC ---
-    function runAndSubmit() {
-        var orig_studentCode = editor.getValue();
+    function submitCode() {
         var studentCode = editor.getValue();
         
-         // Check for forbidden functions (sum, min, max followed by opening parenthesis)
-        var forbidden = studentCode.match(/\b(sum|min|max|sort|lamda|set|replace)\s*\(/);
-    
-            if (forbidden) {
-                var mypre = document.getElementById("terminal-container");
-                // Print the error message directly to the output terminal
-                mypre.innerHTML = "Error: Usage of built-in function '" + forbidden[1] + "()' is not allowed. Please implement the logic manually.";
-                // CRITICAL: Return immediately to stop execution
-                saveFileSilently(orig_studentCode);
-                submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "Usage of built-in function");
-                return;
-            }
+        if (forbidenKeyword.trim() !== "") {
+        // Convert "for,while" into "for|while"
+        const patternStr = forbidenKeyword.split(',')
+            .map(s => s.trim())
+            .filter(s => s !== "")
+            .join('|');
         
-        studentCode = studentCode.replace(/(.*input.*)/g, '$1\nprint("")');
-        // This regex matches a variable name, '=', and a list structure '[...]'
-        studentCode = studentCode.replace(/^\s*\w+\s*=\s*\[.*\]/gm, '# List defined by autograder');
-        studentCode = studentCode.replace(/^\s*target\s*=\s*.*/gm, '# Target defined by autograder');
+            const dynamicRegex = new RegExp('\\b(' + patternStr + ')\\b');
+            dynamicForbidden = studentCode.match(dynamicRegex);
+            if (dynamicForbidden){
+                 var mypre = document.getElementById("output");
+                // Print the error message directly to the output terminal
+                mypre.innerHTML = "Error: you must use recursive function to solve this problem";
+                // CRITICAL: Return immediately to stop execution
+                submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "not recursive function");
+            return;
+            }
+        }
+        
+        // Check for forbidden functions (sum, min, max followed by opening parenthesis)
+        var forbidden = studentCode.match(/\b(sum|min|max|sort|lamda|set|replace)\s*\(/);
 
-        // 1. Indent every line of student code by 4 spaces
-        var indentedCode = studentCode.split('\n').map(function(line){
-            return "    " + line;
-        }).join('\n');
+        if (forbidden) {
+            var mypre = document.getElementById("output");
+            // Print the error message directly to the output terminal
+            mypre.innerHTML = "Error: Usage of built-in function '" + forbidden[1] + "()' is not allowed. Please implement the logic manually.";
+            // CRITICAL: Return immediately to stop execution
+            submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "Usage of built-in function");
+            return;
+        }
 
-        // 2. Wrap it in a function definition
-        var wrappedStudentCode = "def solve():\n" + indentedCode + "\n";
+        tempStudentCode = studentCode.replace(/\bprint\s*\(/g, '#print(');
 
-        // 3. Combine with Teacher Code
-        var finalProgram = wrappedStudentCode + "\n" + teacherCode;
+        var finalProgram = tempStudentCode + "\n" + teacherCode;
 
-        // ... (rest of your existing Skulpt setup logic) ...
-        var mypre = document.getElementById("terminal-container");
+        var mypre = document.getElementById("output");
         mypre.innerHTML = '';
         outputBuffer = "";
 
         Sk.pre = "output";
         Sk.configure({output:outf, read:builtinRead});
-        // ...
+
+        var btn = document.getElementById("btn-run");
+        var originalText = btn.innerHTML;
+        btn.innerHTML = "Running...";
+        btn.disabled = true;
+        btn.classList.add("opacity-50");
+
         Sk.misceval.asyncToPromise(function() {
             return Sk.importMainWithBody("<stdin>", false, finalProgram, true);
         }).then(function(mod) {
             console.log('Execution success');
-
-            // --- AUTO SAVE & SUBMIT ON SUCCESS ---
-            saveFileSilently(orig_studentCode);
-            submitResult(orig_studentCode, fullOutputBuffer);
-
+            submitResult(studentCode, fullOutputBuffer);
             btn.innerHTML = originalText;
             btn.disabled = false;
+            btn.classList.remove("opacity-50");
         }, function(err) {
-            outf("\nCompile Error\nTraceback (most recent call last):\n" + err.toString() + "\n","error");
-
-            // --- AUTO SAVE & SUBMIT ON ERROR ---
-            saveFileSilently(orig_studentCode);
-            submitResult(orig_studentCode, outputBuffer + "\nRuntime Error: " + err.toString());
-
+            outf("\nRuntime Error: " + err.toString());
+            submitResult(studentCode, fullOutputBuffer + "\nRuntime Error: " + err.toString());
             btn.innerHTML = originalText;
             btn.disabled = false;
+            btn.classList.remove("opacity-50");
         });
     }
 
-    // --- 6. SILENT SAVING FUNCTIONS ---
-
-    // Saves the file to the contest folder (Same as old Submit button but no alerts)
-    function saveFileSilently(code) {
-        fetch(window.location.href, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ code: code })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Log to console only for debugging, no UI disruption
-            if (data.status === 'success') {
-                console.log("[Auto-Save] File saved successfully.");
-            } else {
-                console.error("[Auto-Save] Error: " + data.message);
+    function runCode() {
+    var studentCode = editor.getValue();
+    
+    if (forbidenKeyword.trim() !== "") {
+        // Convert "for,while" into "for|while"
+        const patternStr = forbidenKeyword.split(',')
+            .map(s => s.trim())
+            .filter(s => s !== "")
+            .join('|');
+        
+            const dynamicRegex = new RegExp('\\b(' + patternStr + ')\\b');
+            dynamicForbidden = studentCode.match(dynamicRegex);
+            if (dynamicForbidden){
+                 var mypre = document.getElementById("output");
+                // Print the error message directly to the output terminal
+                mypre.innerHTML = "Error: you must use recursive function to solve this problem";
+                // CRITICAL: Return immediately to stop execution
+                submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "not recursive function");
+            return;
             }
-        })
-        .catch(error => {
-            console.error('[Auto-Save] Network Error:', error);
-        });
-    }
-    const normalizeCode = (str) => str.replace(/\s+/g, '');
-    // Saves result to Database (submit.php)
-    function submitResult(code, output) {
-        fullOutputBuffer = "";
+        }
 
+    // Check for forbidden functions (sum, min, max followed by opening parenthesis)
+    var forbidden = studentCode.match(/\b(sum|min|max|sort|lamda|set|replace)\s*\(/);
+
+    if (forbidden) {
+        var mypre = document.getElementById("output");
+        // Print the error message directly to the output terminal
+        mypre.innerHTML = "Error: Usage of built-in function '" + forbidden[1] + "()' is not allowed. Please implement the logic manually.";
+        // CRITICAL: Return immediately to stop execution
+        submitResult(studentCode, "\nCompile Error\nRuntime Error: " + "Usage of built-in function");
+        return;
+    }
+
+    var finalProgram = studentCode;
+    var mypre = document.getElementById("output");
+    mypre.innerHTML = '';
+    outputBuffer = "";
+
+    Sk.pre = "output";
+    Sk.configure({output: outf_std, read: builtinRead});
+
+    var btn = document.getElementById("btn-run");
+    var originalText = btn.innerHTML;
+    btn.innerHTML = "Running...";
+    btn.disabled = true;
+    btn.classList.add("opacity-50");
+
+    Sk.misceval.asyncToPromise(function() {
+        return Sk.importMainWithBody("<stdin>", false, finalProgram, true);
+    }).then(function(mod) {
+        console.log('Execution success');
+        submitResult(studentCode, fullOutputBuffer);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.classList.remove("opacity-50");
+    }, function(err) {
+        outf_std("\nCompile Error\nRuntime Error: " + err.toString());
+        submitResult(studentCode, fullOutputBuffer + "\nCompile Error\nRuntime Error: " + err.toString());
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.classList.remove("opacity-50");
+    });
+}
+
+    const normalizeCode = (str) => str.replace(/\s+/g, '');
+        // Saves result to Database (submit.php)
+    function submitResult(code, output) {
+            
+    
         if (normalizeCode(code) === normalizeCode(submittedCode)) {
             console.log("Code is unchanged. Submission canceled.");
-            return ;
+            return false;
         }
+        
         if (!contestId) {
             console.log("Practice mode: Result not saved to DB.");
             return;
@@ -560,24 +464,18 @@ if (isset($_SESSION['student_id']) && $contestName) {
                 contest_id: contestId,
                 course_code: courseCode,
                 problem_id: problemId,
-                contest_name: contestName,
-                cheat_count: cheatCount
+                contest_name: contestName
             })
         })
         .then(response => response.json())
         .then(data => {
-            submittedCode = code; 
             console.log("Saved to DB:", data);
         })
         .catch((error) => { console.error('Error:', error); });
     }
 
-    function focusInput() {
-        var input = terminal.querySelector(".term-input");
-        if (input) input.focus();
-    }
-
     // --- 7. RESIZERS & SECURITY ---
+    // (Existing resizer logic kept intact)
     const resizerV = document.getElementById('drag-v');
     const leftPanel = document.getElementById('problem-panel');
     const rightContainer = document.getElementById('ide-container');

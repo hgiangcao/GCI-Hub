@@ -33,17 +33,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $end = $_POST['end_time'];
         $isActive = isset($_POST['is_active']) ? 1 : 0;
         $isPublic = isset($_POST['is_public']) ? 1 : 0;
+        $antiCheat = isset($_POST['anti_cheat']) ? 1 : 0;
 
         if (isset($_POST['contest_id']) && !empty($_POST['contest_id'])) {
             // Update
-            if (Contest::update($_POST['contest_id'], $name, $course, $start, $end, $isActive, $isPublic)) {
+            if (Contest::update($_POST['contest_id'], $name, $course, $start, $end, $isActive, $isPublic, $antiCheat)) {
                 $message = "Contest updated successfully.";
             } else {
                 $error = "Failed to UPDATE contest.";
             }
         } else {
             // Create
-            if (Contest::create($name, $course, $start, $end, $isActive, $isPublic)) {
+            if (Contest::create($name, $course, $start, $end, $isActive, $isPublic, $antiCheat)) {
                 $message = "Contest created successfully.";
 
                 // Create Folder in contest_upload
@@ -195,6 +196,12 @@ $availableCourses = Course::getAll(); // <--- NEW: Get data for dropdown
                                     <input type="checkbox" name="is_public" value="1" class="w-4 h-4 text-brand-orange bg-dark-bg border-gray-600 rounded"
                                         <?= ($editMode && $contestToEdit['is_public']) ? 'checked' : '' ?>>
                                     <span class="text-white text-sm">Public</span>
+                                </label>
+
+                                <label class="flex items-center space-x-2 cursor-pointer bg-red-900/40 px-3 py-1.5 rounded-md border border-red-800 ml-auto">
+                                    <input type="checkbox" name="anti_cheat" value="1" class="w-4 h-4 text-red-500 bg-dark-bg border-gray-600 rounded"
+                                        <?= ($editMode && isset($contestToEdit['anti_cheat']) && $contestToEdit['anti_cheat']) ? 'checked' : '' ?>>
+                                    <span class="text-red-400 font-bold text-sm">Anti-Cheat Mode</span>
                                 </label>
                             </div>
                         </div>

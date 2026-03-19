@@ -6,13 +6,13 @@ class Problem {
 
 
 
-public static function create($code, $title, $level, $input_type, $leetcode_id, $leetcode_link, $output_type, $grading_type, $time_limit, $memory_limit, $tag) {
+public static function create($code, $title, $level, $input_type, $leetcode_id, $leetcode_link, $output_type, $grading_type, $time_limit, $memory_limit, $tag,$forbidden_keyword) {
 
 
         $sql = "INSERT INTO problem
-                (code, title, level, input_type, Leetcode_ID, Leetcode_link, output_type, grading_type, time_limit_ms, memory_limit_mb, tag)
+                (code, title, level, input_type, Leetcode_ID, Leetcode_link, output_type, grading_type, time_limit_ms, memory_limit_mb, tag,forbidden_keyword)
                 VALUES
-                (:code, :title, :level, :input_type, :leetcode_id, :leetcode_link, :output_type, :grading_type, :time_limit, :memory_limit, :tag)";
+                (:code, :title, :level, :input_type, :leetcode_id, :leetcode_link, :output_type, :grading_type, :time_limit, :memory_limit, :tag,:forbidden_keyword)";
 
         $stmt = DB::connect()->prepare($sql);
 
@@ -27,13 +27,15 @@ public static function create($code, $title, $level, $input_type, $leetcode_id, 
             ':grading_type'  => $grading_type,
             ':time_limit'    => $time_limit,
             ':memory_limit'  => $memory_limit,
-            ':tag'           => $tag
+            ':tag'           => $tag,
+            ':forbidden_keyword'           => $forbidden_keyword
+            
         ]);
     }
 
     // Read (All)
     public static function getAll() {
-        return DB::connect()->query("SELECT * FROM problem")->fetchAll();
+        return DB::connect()->query("SELECT * FROM problem ORDER BY id DESC")->fetchAll();
     }
 
     // Read (One)
@@ -49,12 +51,12 @@ public static function create($code, $title, $level, $input_type, $leetcode_id, 
     }
 
     // Update
-    public static function update($id, $code, $lc_id, $lc_link, $title, $desc, $level, $time, $memory, $tag) {
+    public static function update($id, $code, $lc_id, $lc_link, $title, $desc, $level, $time, $memory, $tag,$forbidden_keyword) {
         $sql = "UPDATE Problem 
-                SET code=?, Leetcode_ID=?, Leetcode_link=?, title=?, description=?, level=?, time_limit_ms=?, memory_limit_mb=?, tag=? 
+                SET code=?, Leetcode_ID=?, Leetcode_link=?, title=?, description=?, level=?, time_limit_ms=?, memory_limit_mb=?, tag=? ,forbidden_keyword =?
                 WHERE id=?";
         $stmt = DB::connect()->prepare($sql);
-        return $stmt->execute([$code, $lc_id, $lc_link, $title, $desc, $level, $time, $memory, $tag, $id]);
+        return $stmt->execute([$code, $lc_id, $lc_link, $title, $desc, $level, $time, $memory, $tag, $forbidden_keyword, $id]);
     }
 
     // Delete

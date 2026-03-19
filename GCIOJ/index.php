@@ -5,10 +5,22 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
+require_once 'auth.php';
 require_once 'contest.php';
+
+
+function getCourseNamebyCourseCode(string $courseCode): string {
+    $map = [
+        'AL_' => 'Algorithms - ',
+        'PY_' => 'Python Programming '
+    ];
+    
+    return strtr($courseCode, $map);
+}
 
 // 1. Fetch All Contests
 $contests = Contest::getAll();
+
 
 // 2. Group Contests by Course
 $contestsByCourse = [];
@@ -22,7 +34,9 @@ if (!empty($contests)) {
 
 // 3. Status Logic
 function getContestStatus($is_active) {
-    return ($is_active > 0) ? 'Active' : 'Inactive';
+    
+$is_admin = (isset($_SESSION['student_id']) && $_SESSION['student_id'] == 'chgiang');
+    return ($is_active > 0 || $is_admin) ? 'Active' : 'Inactive';
 }
 
 function getStatusColor($status) {
@@ -35,6 +49,7 @@ function getStatusColor($status) {
             return 'text-gray-400 bg-gray-800 border-gray-600';
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -77,12 +92,14 @@ function getStatusColor($status) {
             </div>
         <?php else: ?>
 
-            <?php foreach ($contestsByCourse as $courseName => $courseContests): ?>
+            <?php foreach ($contestsByCourse as $courseName => $courseContests):
+               
+            ?>
 
                 <div class="mb-6">
                     <h2 class="text-xl font-bold text-brand-orange mb-3 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        <?= htmlspecialchars($courseName) ?>
+                        <?= htmlspecialchars(getCourseNamebyCourseCode($courseName)) ?>
                     </h2>
 
                     <div class="bg-dark-surface rounded-lg border border-gray-700 overflow-hidden shadow-lg">
@@ -98,7 +115,7 @@ function getStatusColor($status) {
                             </thead>
                             <tbody class="divide-y divide-gray-700 text-sm">
                                 <?php foreach ($courseContests as $row):
-                                    $status = getContestStatus($row['is_active']);
+                                    $status = getContestStatus($row['is_active']) ;
                                     $colorClass = getStatusColor($status);
                                 ?>
                                 <tr class="hover:bg-dark-hover transition group">

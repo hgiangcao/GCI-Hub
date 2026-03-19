@@ -14,28 +14,24 @@ if (!isset($_GET['code'])) {
     die("Error: No problem code specified in URL.");
 }
 
-$problemCode = preg_replace('/[^a-zA-Z0-9_\-]/', '', $_GET['code']);
+$problemCode = $_GET['code'];
 $problem = Problem::getByCode($problemCode);
 
 
-$courseCode = isset($_GET['course']) ? preg_replace('/[^a-zA-Z0-9_\-]/', '', $_GET['course']) : '';
+$courseCode = $_GET['course'];
 
 if (!$problem) {
     die("Error: Problem code '{$problemCode}' not found.");
 }
 
 // Get Contest Context (Optional but recommended)
-$contestName = isset($_GET['contest']) ? preg_replace('/[^a-zA-Z0-9_\- ]/', '', urldecode($_GET['contest'])) : null;
+$contestName = isset($_GET['contest']) ? urldecode($_GET['contest']) : null;
 
 $contestId = null;
-$antiCheatEnabled = 0;
 
 if ($contestName) {
     $contestObj = Contest::getByNameAndCourse($contestName,$courseCode);
-    if ($contestObj) {
-        $contestId = $contestObj['id'];
-        $antiCheatEnabled = isset($contestObj['anti_cheat']) ? (int)$contestObj['anti_cheat'] : 0;
-    }
+    if ($contestObj) $contestId = $contestObj['id'];
 }
 
 // Extract Data
@@ -115,7 +111,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
                 extend: {
                     colors: {
                         dark: { bg: '#1a1a1a', surface: '#282828', hover: '#3e3e3e', text: '#eff1f6', muted: '#9ca3af' },
-                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444', blue: '#00CED1' }
+                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444' }
                     },
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['Roboto Mono', 'monospace'] }
                 }
@@ -126,7 +122,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
         .resizer-vertical { width: 6px; background: #1a1a1a; cursor: col-resize; z-index: 10; border-left: 1px solid #374151; border-right: 1px solid #374151; }
         .resizer-horizontal { height: 6px; background: #1a1a1a; cursor: row-resize; z-index: 10; border-top: 1px solid #374151; border-bottom: 1px solid #374151; width: 100%; }
         .resizer-vertical:hover, .resizer-horizontal:hover { background: #ffa116; border-color: #ffa116; }
-        .skulpt-pass { color: #0f0; font-weight: 600; }
+        .skulpt-pass { color: #2cbb5d; font-weight: 600; }
         .skulpt-fail { color: #ef4444; font-weight: 600; }
         .skulpt-header { color: #9ca3af; margin-top: 10px; display: block; border-top: 1px solid #374151; padding-top: 10px;}
         .diff-Easy { color: #2cbb5d; background: rgba(44, 187, 93, 0.15); }
@@ -150,12 +146,6 @@ if (isset($_SESSION['student_id']) && $contestName) {
 <body class="bg-dark-bg text-dark-text font-sans h-screen flex flex-col overflow-hidden">
 
 <?php include_once 'nav.php'; ?>
-<?php if ($antiCheatEnabled): ?>
-<div class="bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-500 px-4 py-2 text-sm flex items-center justify-center gap-2 w-full">
-    <i class="fas fa-shield-alt"></i>
-    <span><strong>考試監控中 | 防作弊系統已啟動：</strong>測驗期間請勿切換分頁或離開瀏覽器，系統將全程監控異常行為。</span>
-</div>
-<?php endif; ?>
 
 <div class="flex flex-grow overflow-hidden relative w-full">
 
@@ -179,12 +169,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
     <div id="ide-container" class="flex-grow flex flex-col min-w-[400px] bg-dark-surface">
 
         <div class="h-12 border-b border-gray-700 flex justify-between items-center px-4 bg-dark-surface shrink-0">
-            <div class="font-mono text-sm text-dark-muted flex items-center gap-2">
-    <span>Python 3</span>
-    <span id="cheat-warning" class="hidden ml-3 bg-red-500/20 text-red-500 px-2 py-0.5 rounded text-xs font-bold border border-red-500/50 flex items-center gap-1">
-    <i class="fas fa-exclamation-triangle text-red-500"></i> 違規切換次數：<span id="cheat-count-display">0</span>
-</span>
-</div>
+            <div class="font-mono text-sm text-dark-muted flex items-center gap-2"><span>Python 3</span></div>
 
             <div class="flex gap-2">
                 <button onclick="resetCode()" class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-1.5 px-3 rounded transition flex items-center gap-2 border border-gray-600">
@@ -198,7 +183,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
                 </button>
 
 
-                <button id="btn-submit" onclick="submitCode()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-orange-500/20">
+                <button id="btn-run" onclick="submitCode()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-orange-500/20">
                <i class="fas fa-upload text-[10px]"></i>
                Submit
             </button>
@@ -223,65 +208,6 @@ if (isset($_SESSION['student_id']) && $contestName) {
 </div>
 
 <script>
-    // --- 0. ANTI-CHEAT TRACKER ---
-    const isAntiCheatEnabled = <?= json_encode((bool)$antiCheatEnabled) ?>;
-    const isContestSession = <?= json_encode((bool)$contestId) ?>;
-    const LS_KEY = 'gcioj_cheat_count';
-    
-    let cheatCount = 0;
-    if (isContestSession) {
-        if (isAntiCheatEnabled) {
-            cheatCount = parseInt(localStorage.getItem(LS_KEY) || "0");
-        } else {
-            localStorage.removeItem(LS_KEY); // Reset when opening a non-anti-cheat contest
-        }
-    }
-
-    let isNavigating = false;
-    window.addEventListener('beforeunload', () => { isNavigating = true; });
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('a')) isNavigating = true;
-    });
-
-    let lastCheatTime = 0;
-    const cheatWarning = document.getElementById('cheat-warning');
-    const cheatCounter = document.getElementById('cheat-count-display');
-
-    // Init UI if count exists
-    if (cheatCount > 0 && isAntiCheatEnabled) {
-        cheatWarning.classList.remove('hidden');
-        cheatCounter.innerText = cheatCount;
-    }
-
-    function handleCheat() {
-        if (!isAntiCheatEnabled || isNavigating) return;
-
-        const now = Date.now();
-        if (now - lastCheatTime < 1000) return; // 1-second debounce
-        lastCheatTime = now;
-        
-        cheatCount++;
-        localStorage.setItem(LS_KEY, cheatCount);
-        cheatWarning.classList.remove('hidden');
-        cheatCounter.innerText = cheatCount;
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            handleCheat();
-        } else {
-            isNavigating = false; // Reset flag when user returns to page
-        }
-    });
-
-    window.addEventListener('blur', () => {
-        handleCheat();
-    });
-
-    window.addEventListener('focus', () => {
-        isNavigating = false; // Reset flag when window regains focus
-    });
-
     // --- 1. CONFIG & CACHED ELEMENTS ---
     const config = {
         teacherCode: <?= json_encode($graderContent) ?>,
@@ -300,7 +226,6 @@ if (isset($_SESSION['student_id']) && $contestName) {
     const el = {
         terminal: document.getElementById("output"),
         btnRun: document.getElementById("btn-run"),
-        btnSubmit: document.getElementById("btn-submit"),
         problemPanel: document.getElementById('problem-panel'),
         ideContainer: document.getElementById('ide-container'),
         editorWrapper: document.getElementById('editor-wrapper'),
@@ -316,35 +241,19 @@ if (isset($_SESSION['student_id']) && $contestName) {
     editor.setValue(submittedCode?.trim() ? submittedCode : defaultCode, -1);
 
     // --- 3. UTILITIES ---
-    
+    const normalize = (str) => str.replace(/\s+/g, '');
+
     function updateTerminal(text, isAppend = true) {
         if (!isAppend) el.terminal.innerHTML = '';
         
-        // Split text by lines to style them individually
-        const lines = text.split('\n');
+        const div = document.createElement("div");
+        div.innerText = text;
         
-        lines.forEach(line => {
-            if (line.trim() === "") return;
-    
-            const div = document.createElement("div");
-            div.innerText = line;
-            
-            // 1. Red for Errors and "Wrong Answer"
-            if (/Wrong Answer|WRONG|Error|Exception|failed/.test(line)) {
-                div.className = "skulpt-fail"; 
-            } 
-            // 2. Green for Success and "Pass" counts
-            else if (/Accepted|PASS|Pass:/.test(line)) {
-                div.className = "skulpt-pass";
-            }
-            // 3. Gray/Orange for headers
-            else if (line.includes("---") || line.includes("Test 1")) {
-                div.className = "skulpt-header";
-            }
-    
-            el.terminal.appendChild(div);
-        });
+        if (/Accepted|PASS/.test(text)) div.className = "skulpt-pass";
+        else if (/Wrong Answer|WRONG|Error|Exception/.test(text)) div.className = "skulpt-fail";
+        else if (text.includes("Final Score")) div.className = "skulpt-header";
         
+        el.terminal.appendChild(div);
         el.terminal.scrollTop = el.terminal.scrollHeight;
     }
 
@@ -365,49 +274,30 @@ if (isset($_SESSION['student_id']) && $contestName) {
     }
 
     // --- 4. CORE EXECUTION ---
-    let isExecuting = false; // Guard against concurrent execution
-
     async function executePython(isSubmit = false) {
-        if (isExecuting) return; // Prevent double-run / double-submit
-        isExecuting = true;
-
         const studentCode = editor.getValue();
         const error = validateCode(studentCode);
 
         if (error) {
             updateTerminal(error, false);
             if (isSubmit) submitResult(studentCode, `\nCompile Error\nRuntime Error: ${error}`);
-            isExecuting = false;
             return;
         }
 
-        // UI Feedback: Disable both buttons
-        const originalRunText = el.btnRun.innerHTML;
-        const originalSubmitText = el.btnSubmit.innerHTML;
-        el.btnRun.disabled = true;
-        el.btnSubmit.disabled = true;
-        if (isSubmit) {
-            el.btnSubmit.innerHTML = 'Submitting...';
-        } else {
-            el.btnRun.innerHTML = 'Running...';
-        }
-        el.terminal.innerHTML = '';
-
         const finalProgram = isSubmit 
-            ? `
-import sys
-def __teacher_print(*args, **kwargs):
-    sys.stdout.write(' '.join(map(str, args)) + '\\n')
-def print(*args, **kwargs):
-    pass\n` + studentCode + `\n` + config.teacherCode.replace(/\bprint\s*\(/g, '__teacher_print(')
+            ? studentCode.replace(/\bprint\s*\(/g, '#print(') + "\n" + config.teacherCode 
             : studentCode;
 
+        el.terminal.innerHTML = '';
         let fullOutput = "";
-        let hasError = false;
 
-        // 1. Silent Pre-run to determine outcome
+        // UI Feedback
+        const originalText = el.btnRun.innerHTML;
+        el.btnRun.innerHTML = "Running...";
+        el.btnRun.disabled = true;
+
         Sk.configure({
-            output: (text) => { fullOutput += text; },
+            output: (text) => { fullOutput += text; updateTerminal(text); },
             read: (x) => {
                 if (!Sk.builtinFiles?.files[x]) throw `File not found: '${x}'`;
                 return Sk.builtinFiles.files[x];
@@ -416,38 +306,15 @@ def print(*args, **kwargs):
 
         try {
             await Sk.misceval.asyncToPromise(() => Sk.importMainWithBody("<stdin>", false, finalProgram, true));
-            if (fullOutput.includes("WRONG") || fullOutput.includes("Wrong Answer") || fullOutput.includes("FAIL")) {
-                hasError = true;
-            }
+            if (isSubmit) submitResult(studentCode, fullOutput);
         } catch (err) {
-            hasError = true;
-            fullOutput += `\nRuntime Error: ${err.toString()}`;
+            const errMsg = `\nRuntime Error: ${err.toString()}`;
+            updateTerminal(errMsg);
+            if (isSubmit) submitResult(studentCode, fullOutput + errMsg);
+        } finally {
+            el.btnRun.innerHTML = originalText;
+            el.btnRun.disabled = false;
         }
-        
-        if (isSubmit) {
-            const runCount = 30; 
-            const stopAt = hasError ? Math.floor(Math.random() * Math.min(runCount, 19)) + 1 : runCount;
-            const totalWaitTime = Math.floor(Math.random() * 2000) + 3000; 
-            const interval = totalWaitTime / stopAt;
-        
-            for (let i = 1; i <= stopAt; i++) {
-                el.terminal.innerHTML = `<div class="text-brand-orange">🔍 Checking Test Case ${i}...</div>`;
-                await new Promise(resolve => setTimeout(resolve, interval));
-            }
-        }
-        
-        // Display Final Results
-        el.terminal.innerHTML = ''; 
-        updateTerminal(fullOutput, true);
-
-        if (isSubmit) submitResult(studentCode, fullOutput);
-
-        // Restore buttons
-        el.btnRun.innerHTML = originalRunText;
-        el.btnSubmit.innerHTML = originalSubmitText;
-        el.btnRun.disabled = false;
-        el.btnSubmit.disabled = false;
-        isExecuting = false;
     }
 
     // --- 5. API HANDLERS ---
@@ -464,8 +331,7 @@ def print(*args, **kwargs):
                 contest_id: config.contestId,
                 course_code: config.courseCode,
                 problem_id: config.problemId,
-                contest_name: config.contestName,
-                cheat_count: cheatCount
+                contest_name: config.contestName
             })
         })
         .then(res => res.json())
@@ -482,78 +348,7 @@ def print(*args, **kwargs):
 
     // --- 7. SECURITY & RESIZING ---
     // (Resizer logic remains standard as requested, but uses the 'el' cache)
-    
-    // --- 7. RESIZERS & SECURITY ---
-    // (Existing resizer logic kept intact)
-    const resizerV = document.getElementById('drag-v');
-    const leftPanel = document.getElementById('problem-panel');
-    const rightContainer = document.getElementById('ide-container');
-    let isResizingV = false;
-    resizerV.addEventListener('mousedown', function(e) { isResizingV = true; document.body.style.cursor = 'col-resize'; leftPanel.style.userSelect = 'none'; rightContainer.style.userSelect = 'none'; editor.container.style.pointerEvents = 'none'; });
-    const resizerH = document.getElementById('drag-h');
-    const editorWrapper = document.getElementById('editor-wrapper');
-    const consolePanel = document.getElementById('console-panel');
-    let isResizingH = false;
-    resizerH.addEventListener('mousedown', function(e) { isResizingH = true; document.body.style.cursor = 'row-resize'; editorWrapper.style.userSelect = 'none'; consolePanel.style.userSelect = 'none'; editor.container.style.pointerEvents = 'none'; });
-    let rafV;
-    let rafH;
-    document.addEventListener('mousemove', function(e) {
-        if (isResizingV) {
-            if (rafV) cancelAnimationFrame(rafV);
-            rafV = requestAnimationFrame(() => {
-                let newWidth = (e.clientX / window.innerWidth) * 100;
-                if (newWidth > 15 && newWidth < 85) { leftPanel.style.width = newWidth + '%'; }
-                editor.resize();
-            });
-        }
-        if (isResizingH) {
-            if (rafH) cancelAnimationFrame(rafH);
-            rafH = requestAnimationFrame(() => {
-                const ideRect = document.getElementById('ide-container').getBoundingClientRect();
-                const containerHeight = ideRect.height;
-                const relativeY = e.clientY - ideRect.top;
-                let newHeightPercentage = (relativeY / containerHeight) * 100;
-                 if (newHeightPercentage > 20 && newHeightPercentage < 85) { editorWrapper.style.height = newHeightPercentage + '%'; }
-                 editor.resize();
-            });
-        }
-    });
-    document.addEventListener('mouseup', function(e) {
-        if (isResizingV || isResizingH) {
-            isResizingV = false; isResizingH = false; document.body.style.cursor = 'default';
-            leftPanel.style.userSelect = 'auto'; rightContainer.style.userSelect = 'auto';
-            editorWrapper.style.userSelect = 'auto'; consolePanel.style.userSelect = 'auto';
-            editor.container.style.pointerEvents = 'auto';
-        }
-    });
-    
-    // 1. Disable internal Ace commands for Copy, Cut, and Paste
-editor.commands.addCommand({
-    name: "disableClipboard",
-    bindKey: {
-        win: "Ctrl-C|Ctrl-X|Ctrl-V",
-        mac: "Command-C|Command-X|Command-V"
-    },
-    exec: () => { 
-        console.log("Clipboard action blocked.");
-        return true; 
-    },
-    readOnly: false 
-});
-
-// 2. Disable browser-level events on the editor container
-const editorEl = document.getElementById('editor');
-
-['copy', 'cut', 'paste'].forEach(eventType => {
-    editorEl.addEventListener(eventType, e => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (eventType === 'paste') alert("Pasting is disabled.");
-    }, true);
-});
-
-// 3. Disable right-click specifically on the editor to prevent 'Paste' via menu
-document.addEventListener('contextmenu', event => event.preventDefault());
+    editor.on("paste", e => { e.text = ""; alert("Pasting is disabled."); });
 </script>
 
 </body>

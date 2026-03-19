@@ -9,6 +9,7 @@ if (!isset($_GET['name'])) {
     die("Error: No contest name specified.");
 }
 
+
 $contestName = urldecode($_GET['name']);
 $courseName = urldecode($_GET['course']);
 
@@ -21,11 +22,16 @@ if (!$contest) {
     die("<div class='p-10 text-white text-center'>Error: Contest 'htmlspecialchars($contestName)' not found.</div>");
 }
 
+if (!$contest['is_active'] &&  $_SESSION['student_id'] != 'chgiang') {
+    header("Location: standings.php?contestID=" . $contest['id'] . "&course=" . $courseName);
+    exit;
+}
+
 // B. Fetch Problems using the Contest ID we just found
 $problems = Contest::getProblems($contest['id']);
 
 // 3. Status Logic
-$status = ($contest['is_active'] == 1) ? 'Active' : 'Inactive';
+$status = ($contest['is_active'] == 1 ) ? 'Active' : 'Inactive';
 
 // Helper for Letter Indexing (A, B, C...)
 function getProblemLetter($index) {
@@ -53,6 +59,7 @@ function getDifficultyColor($level) {
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($contest['name']) ?> - GCIOJ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -71,6 +78,12 @@ function getDifficultyColor($level) {
 <body class="bg-dark-bg text-dark-text font-sans min-h-screen flex flex-col">
 
     <?php include_once 'nav.php'; ?>
+    <?php if (isset($contest['anti_cheat']) && $contest['anti_cheat']): ?>
+    <div class="bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-500 px-4 py-2 text-sm flex items-center justify-center gap-2 w-full">
+        <i class="fas fa-shield-alt"></i>
+        <span><strong>考試監控中 | 防作弊系統已啟動：</strong>測驗期間請勿切換分頁或離開瀏覽器，系統將全程監控異常行為。</span>
+    </div>
+    <?php endif; ?>
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
 
@@ -91,6 +104,12 @@ function getDifficultyColor($level) {
                     </p>
                 <p>
                  <span><a href="standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>">Standings</a></span>
+                 <?php
+                    if (isset($_SESSION['student_id']) && $_SESSION['student_id'] == 'chgiang') {
+                        echo "<span><a href='timeline.php?contestID={$contest['id']}&course={$courseName}'>Timeline</a></span>";
+                         echo "<span><a href='animation_standings.php?contestID={$contest['id']}&course={$courseName}'>Animation</a></span>";
+                    }
+                    ?>
                 </p>
                 </div>
             </div>
@@ -121,6 +140,10 @@ function getDifficultyColor($level) {
                                 $isSubmitted = false;
                                 if (isset($_SESSION['user_id'])) {
                                     $isSubmitted = Submission::hasSubmitted($_SESSION['user_id'], $contest['id'] , $row['id']);
+                                    if ($isSubmitted)
+                                        $submissionStatus = Submission::getSubmissionStatus($_SESSION['user_id'], $contest['id'] , $row['id']);
+                                    else
+                                         $submissionStatus = "Not Submitted";
                                 }
                             ?>
                             <tr class="hover:bg-dark-hover transition group">
@@ -137,19 +160,28 @@ function getDifficultyColor($level) {
                                 </td>
 
                                 <td class="px-6 py-4 text-center font-bold <?= getDifficultyColor($row['level']) ?>">
-                                    <?= $pts ?>
+                                    <?php
+                                    if ($isSubmitted  == false)
+                                            echo "--/".$pts;
+                                    else if ($isSubmitted && strcmp($submissionStatus,"Accepted")==0)
+                                        echo $pts."/".$pts;
+                                    else
+                                            echo "0/".$pts;
+
+
+                                    ?>
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    <?php if ($isSubmitted): ?>
+                                    <?php if ($isSubmitted && strcmp($submissionStatus,"Accepted")==0): ?>
                                         <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>&course=<?= urlencode($courseName) ?>"
                                            class="inline-block bg-green-900/30 border border-green-600 text-green-400 hover:bg-green-900/50 px-4 py-2 rounded text-xs font-bold transition">
-                                            Submitted
+                                             <?= htmlspecialchars($submissionStatus) ?>
                                         </a>
                                     <?php else: ?>
                                         <a href="<?= $link_solve_problem ?>?code=<?= $row['code'] ?>&contest=<?= urlencode($contestName) ?>&course=<?= urlencode($courseName) ?>"
                                            class="inline-block bg-red-900/30 border border-red-600 text-red-400 hover:bg-red-900/50 px-4 py-2 rounded text-xs font-bold transition">
-                                            Not Submitted
+                                             <?= htmlspecialchars($submissionStatus) ?>
                                         </a>
                                     <?php endif; ?>
                                 </td>
@@ -169,6 +201,14 @@ function getDifficultyColor($level) {
     </main>
 
    <?php include 'footer.php' ?>
+   
+   <script>
+    // Reset cheat count if this contest has anti-cheat disabled
+    const isAntiCheatEnabled = <?= json_encode(isset($contest['anti_cheat']) && $contest['anti_cheat']) ?>;
+    if (!isAntiCheatEnabled) {
+        localStorage.removeItem('gcioj_cheat_count');
+    }
+   </script>
 
 </body>
 </html>
