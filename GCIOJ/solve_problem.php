@@ -248,9 +248,9 @@ if (isset($_SESSION['student_id']) && $contestName) {
     const cheatCounter = document.getElementById('cheat-count-display');
 
     // Init UI if count exists
-    if (cheatCount > 0 && isAntiCheatEnabled) {
+    if (cheatCount > 5 && isAntiCheatEnabled) {
         cheatWarning.classList.remove('hidden');
-        cheatCounter.innerText = cheatCount;
+        cheatCounter.innerText = cheatCount-5;
     }
 
     function handleTabLeave() {
@@ -271,8 +271,10 @@ if (isset($_SESSION['student_id']) && $contestName) {
         if (elapsed >= CHEAT_THRESHOLD_MS) {
             cheatCount++;
             localStorage.setItem(LS_KEY, cheatCount);
-            cheatWarning.classList.remove('hidden');
-            cheatCounter.innerText = cheatCount;
+            if (cheatCount > 5 && isAntiCheatEnabled) {
+                cheatWarning.classList.remove('hidden');
+                cheatCounter.innerText = cheatCount-5;
+            }
         }
     }
 

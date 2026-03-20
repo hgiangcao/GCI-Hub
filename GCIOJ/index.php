@@ -126,7 +126,10 @@ function getStatusColor($status) {
                                                     <?= htmlspecialchars($row['name']) ?>
                                                 </a>
                                             <?php else: ?>
+                                                <a href="animation_standings.php?contestID=<?= urlencode($row['id']) ?>&course=<?= urlencode($row['course']) ?>">
+                                                
                                                 <span class="text-gray-400"><?= htmlspecialchars($row['name']) ?></span>
+                                            </a>
                                             <?php endif; ?>
                                         </div>
                                     </td>

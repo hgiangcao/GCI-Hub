@@ -35,8 +35,15 @@ $status = ($contest['is_active'] == 1 ) ? 'Active' : 'Inactive';
 
 // Helper for Letter Indexing (A, B, C...)
 function getProblemLetter($index) {
-    return chr(65 + $index);
+
+    $letter = '';
+    while ($index >= 0) {
+        $letter = chr(65 + ($index % 26)) . $letter;
+        $index = intval($index / 26) - 1;
+    }
+    return $letter;
 }
+
 
 // Helper for Difficulty Colors
 function getDifficultyColor($level) {
@@ -102,12 +109,13 @@ function getDifficultyColor($level) {
                         <span class="mr-4">📅 Start: <?= $contest['start_time'] ?></span>
                         <span>🏁 End: <?= $contest['end_time'] ?></span>
                     </p>
-                <p>
-                 <span><a href="standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>">Standings</a></span>
-                 <?php
+                 <p class="mt-4 flex flex-wrap gap-4 text-sm font-bold">
+                  <a href="standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>" class="text-brand-orange hover:underline decoration-2 underline-offset-4"><i class="fas fa-list-ol mr-1"></i>Standings</a>
+                  <?php
                     if (isset($_SESSION['student_id']) && $_SESSION['student_id'] == 'chgiang') {
-                        echo "<span><a href='timeline.php?contestID={$contest['id']}&course={$courseName}'>Timeline</a></span>";
-                         echo "<span><a href='animation_standings.php?contestID={$contest['id']}&course={$courseName}'>Animation</a></span>";
+                        echo "<a href='timeline.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-blue hover:underline decoration-2 underline-offset-4'><i class='fas fa-history mr-1'></i>Timeline</a>";
+                        echo "<a href='tracking_behaviour.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-green hover:underline decoration-2 underline-offset-4'><i class='fas fa-chart-line mr-1'></i>Tracking</a>";
+                        echo "<a href='animation_standings.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-orange hover:underline decoration-2 underline-offset-4'><i class='fas fa-play mr-1'></i>Animation</a>";
                     }
                     ?>
                 </p>

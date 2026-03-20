@@ -90,8 +90,14 @@ usort($students, function($a, $b) use ($rankData) {
 });
 
 function getProblemLetter($index) {
-    return chr(65 + $index);
-}
+
+    $letter = '';
+    while ($index >= 0) {
+        $letter = chr(65 + ($index % 26)) . $letter;
+        $index = intval($index / 26) - 1;
+    }
+    return $letter;
+}   
 ?>
 
 <!DOCTYPE html>
@@ -133,7 +139,11 @@ function getProblemLetter($index) {
                     <h1 class="text-3xl font-bold text-white mb-2">Standings: <?= htmlspecialchars($contest['name']) ?></h1>
                     <p class="text-dark-muted text-sm">Course: <span class="text-brand-orange"><?= htmlspecialchars($contest['course']) ?></span></p>
                 </div>
-                <div>
+                <div class="flex gap-2">
+                    <a href="standing_animation.php?contestID=<?= $contestId ?>" 
+                       class="px-4 py-2 bg-brand-green hover:bg-green-600 text-white rounded border border-green-700 transition text-sm font-bold flex items-center gap-2">
+                        <i class="fas fa-gamepad"></i> Visual Standings
+                    </a>
                     <a href="viewcontest.php?name=<?= urlencode($contest['name']) ?>&course=<?= urlencode($courseName) ?>"
                        class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded border border-gray-600 transition text-sm font-bold">
                         ← Back to Problems

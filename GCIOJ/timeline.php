@@ -27,7 +27,13 @@ $stmt->execute([$contestId]);
 $problems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 function getProblemLetter($index) {
-    return chr(65 + $index);
+
+    $letter = '';
+    while ($index >= 0) {
+        $letter = chr(65 + ($index % 26)) . $letter;
+        $index = intval($index / 26) - 1;
+    }
+    return $letter;
 }
 
 $problemLetterMap = [];

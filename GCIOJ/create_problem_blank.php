@@ -81,8 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .type-btn { transition: all 0.2s ease; }
         .type-btn.active { border-color: #ffa116; background: rgba(255, 161, 22, 0.1); color: #ffa116; }
         .type-btn:not(.active):hover { border-color: #555; }
-        .optional-section { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-        .optional-section.open { max-height: 600px; }
     </style>
 </head>
 <body class="bg-dark-bg text-dark-text font-sans min-h-screen">
@@ -91,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="max-w-xl mx-auto p-6 md:p-10">
 
-        <!-- Header -->
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-xl font-bold text-white flex items-center gap-2">
@@ -103,7 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="dashboard.php" class="text-xs text-dark-muted hover:text-white transition">← Dashboard</a>
         </div>
 
-        <!-- Messages -->
         <?php if ($message): ?>
             <div class="bg-green-900/30 text-green-400 p-3 rounded-lg mb-5 border border-green-800 text-sm flex items-center gap-2">
                 <i class="fas fa-check-circle"></i> <?= $message ?>
@@ -115,10 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
-        <!-- Form -->
         <form method="POST" class="space-y-5">
 
-            <!-- MAIN: Title -->
             <div>
                 <label class="text-xs text-dark-muted block mb-1.5">Title <span class="text-brand-red">*</span></label>
                 <input type="text" name="title" required placeholder="e.g. Two Sum" autofocus
@@ -126,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-4 py-3 text-sm outline-none">
             </div>
 
-            <!-- MAIN: Problem Type (combined output + grading) -->
             <div>
                 <label class="text-xs text-dark-muted block mb-2">Problem Type</label>
                 <div class="grid grid-cols-2 gap-3">
@@ -146,76 +139,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="hidden" name="grading_type" id="inp_grading_type" value="algorithm">
             </div>
 
-            <!-- Submit -->
-            <button type="submit" class="w-full py-3 bg-brand-orange hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg shadow-orange-500/20 transition-all duration-200 hover:-translate-y-0.5 text-sm">
-                Create Problem
-            </button>
-
-            <!-- Optional Fields Toggle -->
-            <div class="pt-2">
-                <button type="button" onclick="toggleOptional()" id="toggle-btn"
-                        class="w-full text-xs text-dark-muted hover:text-white transition flex items-center justify-center gap-1.5 py-2">
-                    <i class="fas fa-chevron-down text-[8px]" id="toggle-icon"></i>
-                    More Options
-                </button>
-
-                <div id="optional-fields" class="optional-section mt-3 space-y-4">
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-xs text-dark-muted block mb-1">Level</label>
-                            <select name="level" class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
-                                <option value="Easy">Easy</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Hard">Hard</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs text-dark-muted block mb-1">Tags</label>
-                            <input type="text" name="tag" placeholder="array, dp"
-                                   class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-dark-muted block mb-1">Input Variable</label>
-                        <input type="text" name="input_type" value="arg"
-                               class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm font-mono outline-none">
-                    </div>
-
-                    <div>
-                        <label class="text-xs text-dark-muted block mb-1">Forbidden Keywords</label>
-                        <input type="text" name="forbidden_keyword" placeholder="for,while,import"
-                               class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm font-mono outline-none">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-xs text-dark-muted block mb-1">Time (ms)</label>
-                            <input type="number" name="time_limit_ms" value="1000"
-                                   class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
-                        </div>
-                        <div>
-                            <label class="text-xs text-dark-muted block mb-1">Memory (MB)</label>
-                            <input type="number" name="memory_limit_mb" value="256"
-                                   class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-xs text-dark-muted block mb-1">Leetcode ID</label>
-                            <input type="text" name="leetcode_id" placeholder="1"
-                                   class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
-                        </div>
-                        <div>
-                            <label class="text-xs text-dark-muted block mb-1">Leetcode Link</label>
-                            <input type="text" name="leetcode_link" placeholder="https://..."
-                                   class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
-                        </div>
-                    </div>
-
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <div>
+                    <label class="text-xs text-dark-muted block mb-1">Level</label>
+                    <select name="level" class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
                 </div>
+                <div>
+                    <label class="text-xs text-dark-muted block mb-1">Tags</label>
+                    <input type="text" name="tag" placeholder="array, dp"
+                           class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs text-dark-muted block mb-1">Input Variable</label>
+                <input type="text" name="input_type" value="arg"
+                       class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm font-mono outline-none">
+            </div>
+
+            <div>
+                <label class="text-xs text-dark-muted block mb-1">Forbidden Keywords</label>
+                <input type="text" name="forbidden_keyword" placeholder="for,while,import"
+                       class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm font-mono outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs text-dark-muted block mb-1">Time (ms)</label>
+                    <input type="number" name="time_limit_ms" value="1000"
+                           class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="text-xs text-dark-muted block mb-1">Memory (MB)</label>
+                    <input type="number" name="memory_limit_mb" value="256"
+                           class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs text-dark-muted block mb-1">Leetcode ID</label>
+                    <input type="text" name="leetcode_id" placeholder="1"
+                           class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="text-xs text-dark-muted block mb-1">Leetcode Link</label>
+                    <input type="text" name="leetcode_link" placeholder="https://..."
+                           class="form-input w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" class="w-full py-3 bg-brand-orange hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg shadow-orange-500/20 transition-all duration-200 hover:-translate-y-0.5 text-sm">
+                    Create Problem
+                </button>
             </div>
 
         </form>
@@ -226,14 +207,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('inp_grading_type').value = type;
             document.getElementById('btn-algorithm').classList.toggle('active', type === 'algorithm');
             document.getElementById('btn-test').classList.toggle('active', type === 'test');
-        }
-
-        let optionalOpen = false;
-        function toggleOptional() {
-            optionalOpen = !optionalOpen;
-            document.getElementById('optional-fields').classList.toggle('open', optionalOpen);
-            document.getElementById('toggle-icon').style.transform = optionalOpen ? 'rotate(180deg)' : '';
-            document.getElementById('toggle-btn').querySelector('span')
         }
     </script>
 
