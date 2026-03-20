@@ -33,7 +33,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'fetch' && isset($_GET['id']))
 
 // --- B. Page Init ---
 $nextIdPreview = Problem::get_next_id();
-$nextIdStr = sprintf('%03d', $nextIdPreview);
 $message = "";
 $error = "";
 
@@ -68,10 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // --- CREATE MODE (DB + FILES) ---
         $rawTitle = trim($_POST['title']);
-        $cleanTitle = preg_replace('/[^a-zA-Z0-9]/', '', strtoupper($rawTitle));
-        if (strlen($cleanTitle) < 6) $cleanTitle .= str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        $suffix = substr(str_shuffle($cleanTitle), 0, 6);
-        $code = "G" . sprintf('%03d', $nextIdPreview) . "_" . $suffix;
+        $code = (string)$nextIdPreview;
 
         if (empty($rawTitle)) {
             $error = "Title is required for new problems.";
@@ -92,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $message = "Problem created! Code: <strong>{$code}</strong>";
                 $nextIdPreview++;
-                $nextIdStr = sprintf('%03d', $nextIdPreview);
                 $allProblems = Problem::getAll(); // Refresh list
             } catch (Exception $e) {
                 $error = "Database Error: " . $e->getMessage();
@@ -134,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </h1>
 
                 <select id="problemSelect" onchange="loadProblem(this.value, true)" class="bg-dark-surface border border-dark-border text-sm rounded px-3 py-1 focus:border-brand-orange outline-none ml-4 max-w-[300px]">
-                    <option value="">+ Create New Problem (Next: G<?= $nextIdStr ?>)</option>
+                    <option value="">+ Create New Problem (Next ID: <?= $nextIdPreview ?>)</option>
                     <?php foreach ($allProblems as $p): ?>
                         <option value="<?= $p['id'] ?>" <?= ($preselectedId == $p['id']) ? 'selected' : '' ?>>
                             <?= $p['code'] ?> - <?= htmlspecialchars($p['title']) ?>

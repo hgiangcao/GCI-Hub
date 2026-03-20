@@ -106,6 +106,8 @@ foreach ($timelineSubs as $sub) {
 }
 
 // Handle empty data or same-time activity
+$contestStart = strtotime($contest['start_time'] ?? 'now');
+$contestEnd   = strtotime($contest['end_time'] ?? 'now');
 if ($minTime > $maxTime) { $minTime = $contestStart; $maxTime = $contestEnd; }
 $timeRange = max(1, $maxTime - $minTime);
 

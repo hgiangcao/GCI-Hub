@@ -2,7 +2,6 @@
 // --- 1. CONTROLLER ---
 session_start();
 require_once 'auth.php'; // Ensure admin is logged in
-
 require_once 'check_admin.php';
 require_once 'student.php';
 
@@ -36,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             if (!empty($db_id)) {
                 // UPDATE
-                if (Student::update($db_id, $sid, $name, $name,  $class,$pass)) {
+                if (Student::update($db_id, $sid, $name, $name, $class, $pass)) {
                     $message = "Student updated successfully.";
                 } else {
                     $error = "Failed to update student.";
@@ -44,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // CREATE
                 if (empty($pass)) $pass = "123456"; // Default password if empty on create
-                if (Student::create($sid, $name, $name,  $class,$pass)){
+                if (Student::create($sid, $name, $name, $class, $pass)){
                     $message = "Student added successfully.";
                 } else {
                     $error = "Failed to add student. ID might already exist.";
@@ -97,8 +96,8 @@ $students = Student::getAll();
             <a href="index.php" class="text-dark-muted hover:text-white transition">&larr; Dashboard</a>
         </div>
 
-        <?php if ($message): ?> <div class="bg-green-900/50 text-green-300 p-4 rounded mb-6 border border-green-700"><?= $message ?></div> <?php endif; ?>
-        <?php if ($error): ?> <div class="bg-red-900/50 text-red-300 p-4 rounded mb-6 border border-red-700"><?= $error ?></div> <?php endif; ?>
+        <?php if ($message): ?> <div class="bg-green-900/50 text-green-300 p-4 rounded mb-6 border border-green-700"><?= htmlspecialchars($message) ?></div> <?php endif; ?>
+        <?php if ($error): ?> <div class="bg-red-900/50 text-red-300 p-4 rounded mb-6 border border-red-700"><?= htmlspecialchars($error) ?></div> <?php endif; ?>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -108,14 +107,14 @@ $students = Student::getAll();
 
                     <form method="POST">
                         <input type="hidden" name="save_student" value="1">
-                        <input type="hidden" name="db_id" value="<?= $editMode ? $studentToEdit['id'] : '' ?>">
+                        <input type="hidden" name="db_id" value="<?= $editMode ? htmlspecialchars($studentToEdit['id']) : '' ?>">
 
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm text-dark-muted mb-1">Student ID</label>
                                 <input type="text" name="student_id" required
                                        class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-white focus:border-brand-orange outline-none"
-                                       value="<?= $editMode ? htmlspecialchars($studentToEdit['student_id']) : '' ?>"
+                                       value="<?= $editMode ? htmlspecialchars($studentToEdit['student_id'] ?? '') : '' ?>"
                                        placeholder="e.g. U123456">
                             </div>
 
@@ -123,7 +122,7 @@ $students = Student::getAll();
                                 <label class="block text-sm text-dark-muted mb-1">Name / Username</label>
                                 <input type="text" name="username" required
                                        class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-white focus:border-brand-orange outline-none"
-                                       value="<?= $editMode ? htmlspecialchars($studentToEdit['username']) : '' ?>"
+                                       value="<?= $editMode ? htmlspecialchars($studentToEdit['username'] ?? $studentToEdit['name'] ?? '') : '' ?>"
                                        placeholder="e.g. John Doe">
                             </div>
 
@@ -131,7 +130,7 @@ $students = Student::getAll();
                                 <label class="block text-sm text-dark-muted mb-1">Class</label>
                                 <input type="text" name="class"
                                        class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-white focus:border-brand-orange outline-none"
-                                       value="<?= $editMode ? htmlspecialchars($studentToEdit['class']) : '' ?>"
+                                       value="<?= $editMode ? htmlspecialchars($studentToEdit['class'] ?? '') : '' ?>"
                                        placeholder="e.g. CS101">
                             </div>
 
@@ -148,7 +147,7 @@ $students = Student::getAll();
                                 <?= $editMode ? 'Update' : 'Add Student' ?>
                             </button>
                             <?php if ($editMode): ?>
-                                <a href="StudentManagement.php" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded transition text-center">Cancel</a>
+                                <a href="student_management.php" class="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded transition text-center flex items-center justify-center">Cancel</a>
                             <?php endif; ?>
                         </div>
                     </form>
@@ -169,19 +168,19 @@ $students = Student::getAll();
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-700 text-sm">
-                                <?php if (count($students) > 0): ?>
+                                <?php if (!empty($students) && count($students) > 0): ?>
                                     <?php foreach ($students as $stu): ?>
                                     <tr class="hover:bg-dark-hover transition">
-                                        <td class="px-6 py-4 text-dark-muted">#<?= $stu['id'] ?></td>
-                                        <td class="px-6 py-4 font-mono text-brand-orange"><?= htmlspecialchars($stu['student_id']) ?></td>
-                                        <td class="px-6 py-4 font-medium text-white"><?= htmlspecialchars($stu['name']) ?></td>
-                                        <td class="px-6 py-4 text-gray-400"><?= htmlspecialchars($stu['class']) ?></td>
+                                        <td class="px-6 py-4 text-dark-muted">#<?= htmlspecialchars($stu['id'] ?? '') ?></td>
+                                        <td class="px-6 py-4 font-mono text-brand-orange"><?= htmlspecialchars($stu['student_id'] ?? '') ?></td>
+                                        <td class="px-6 py-4 font-medium text-white"><?= htmlspecialchars($stu['username'] ?? $stu['name'] ?? '') ?></td>
+                                        <td class="px-6 py-4 text-gray-400"><?= htmlspecialchars($stu['class'] ?? '') ?></td>
                                         <td class="px-6 py-4 text-right space-x-2">
-                                            <a href="StudentManagement.php?edit_id=<?= $stu['id'] ?>" class="text-brand-orange hover:text-white transition">Edit</a>
+                                            <a href="student_management.php?edit_id=<?= urlencode($stu['id']) ?>" class="text-brand-orange hover:text-white transition">Edit</a>
 
-                                            <form method="POST" class="inline-block" onsubmit="return confirm('Delete <?= htmlspecialchars($stu['username']) ?>? This will delete all their submissions.');">
+                                            <form method="POST" class="inline-block" onsubmit="return confirm('Delete <?= htmlspecialchars(addslashes($stu['username'] ?? $stu['name'] ?? 'this student')) ?>? This will delete all their submissions.');">
                                                 <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="id" value="<?= $stu['id'] ?>">
+                                                <input type="hidden" name="id" value="<?= htmlspecialchars($stu['id']) ?>">
                                                 <button type="submit" class="text-brand-red hover:text-red-400 transition ml-2">Delete</button>
                                             </form>
                                         </td>

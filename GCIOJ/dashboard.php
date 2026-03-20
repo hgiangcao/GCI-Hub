@@ -65,6 +65,14 @@ require_once 'check_admin.php';
                 <p class="text-sm text-dark-muted">Create problems, upload test cases.</p>
             </a>
 
+            <a href="create_problem_blank.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-cyan transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 flex flex-col items-center justify-center text-center h-64">
+                <div class="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-cyan-500/20 transition">
+                    <i class="fas fa-bolt text-3xl text-brand-cyan"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">Quick Create Problem</h2>
+                <p class="text-sm text-dark-muted">DB entry only — no files needed.</p>
+            </a>
+
 
             <a href="list_problems.php" class="group bg-dark-surface p-8 rounded-2xl border border-gray-700 hover:border-brand-orange transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/10 flex flex-col items-center justify-center text-center h-64">
                 <div class="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-orange-500/20 transition">

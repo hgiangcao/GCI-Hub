@@ -242,7 +242,8 @@ if (isset($_SESSION['student_id']) && $contestName) {
         if (e.target.closest('a')) isNavigating = true;
     });
 
-    let lastCheatTime = 0;
+    let tabLeftTime = 0; // Timestamp when user left the tab
+    const CHEAT_THRESHOLD_MS = 3000; // 5 seconds threshold
     const cheatWarning = document.getElementById('cheat-warning');
     const cheatCounter = document.getElementById('cheat-count-display');
 
@@ -252,33 +253,43 @@ if (isset($_SESSION['student_id']) && $contestName) {
         cheatCounter.innerText = cheatCount;
     }
 
-    function handleCheat() {
+    function handleTabLeave() {
         if (!isAntiCheatEnabled || isNavigating) return;
+        if (tabLeftTime === 0) {
+            tabLeftTime = Date.now();
+        }
+    }
 
-        const now = Date.now();
-        if (now - lastCheatTime < 1000) return; // 1-second debounce
-        lastCheatTime = now;
-        
-        cheatCount++;
-        localStorage.setItem(LS_KEY, cheatCount);
-        cheatWarning.classList.remove('hidden');
-        cheatCounter.innerText = cheatCount;
+    function handleTabReturn() {
+        isNavigating = false;
+        if (!isAntiCheatEnabled || tabLeftTime === 0) {
+            tabLeftTime = 0;
+            return;
+        }
+        const elapsed = Date.now() - tabLeftTime;
+        tabLeftTime = 0;
+        if (elapsed >= CHEAT_THRESHOLD_MS) {
+            cheatCount++;
+            localStorage.setItem(LS_KEY, cheatCount);
+            cheatWarning.classList.remove('hidden');
+            cheatCounter.innerText = cheatCount;
+        }
     }
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            handleCheat();
+            handleTabLeave();
         } else {
-            isNavigating = false; // Reset flag when user returns to page
+            handleTabReturn();
         }
     });
 
     window.addEventListener('blur', () => {
-        handleCheat();
+        handleTabLeave();
     });
 
     window.addEventListener('focus', () => {
-        isNavigating = false; // Reset flag when window regains focus
+        handleTabReturn();
     });
 
     // --- 1. CONFIG & CACHED ELEMENTS ---
@@ -356,7 +367,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
             }
         }
         // Built-in check
-        const forbiddenBuiltins = code.match(/\b(sum|min|max|sort|lambda|set|replace)\s*\(/);
+        const forbiddenBuiltins = code.match(/\b(sum|min|count|max|sort|lambda|set|replace)\s*\(/);
         if (forbiddenBuiltins) {
             return `Error: Usage of built-in function '${forbiddenBuiltins[1]}()' is not allowed.`;
         }

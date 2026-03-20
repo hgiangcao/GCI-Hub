@@ -16,14 +16,19 @@ $data = json_decode(file_get_contents('php://input'), true);
 
 $studentId    = $_SESSION['student_id']; // String ID (e.g. "U123456")
 $dbId    = $_SESSION['user_id']; // String ID (e.g. "U123456")
-$problemCode  = $data['problem_code'];
-$contestName    = $data['contest_name'];
-$problemId  = $data['problem_id'];
-$contestId    = $data['contest_id'];
-$courseCode    = $data['course_code'];
-$pythonCode   = $data['code'];
-$outputLog    = $data['output'];
+$problemCode  = $data['problem_code'] ?? '';
+$contestName  = $data['contest_name'] ?? '';
+$problemId    = $data['problem_id'] ?? '';
+$contestId    = $data['contest_id'] ?? '';
+$courseCode   = $data['course_code'] ?? '';
+$pythonCode   = $data['code'] ?? '';
+$outputLog    = $data['output'] ?? '';
 $countCheat   = isset($data['cheat_count']) ? (int)$data['cheat_count'] : 0;
+
+if (empty($contestId) || empty($problemId) || empty($pythonCode)) {
+    echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
+    exit;
+}
 
 // 3. Determine Result & Score
 $result = "Wrong Answer"; // Default

@@ -206,7 +206,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                    Run
                 </button>
-                <button id="btn-run" onclick="runAndSubmit()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                <button id="btn-submit" onclick="runAndSubmit()" class="bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold py-1.5 px-4 rounded transition flex items-center gap-2 shadow-lg shadow-blue-500/20">
                    <i class="fas fa-upload text-[10px]"></i>
                Submit
             </button>
@@ -251,7 +251,8 @@ if (isset($_SESSION['student_id']) && $contestName) {
         if (e.target.closest('a')) isNavigating = true;
     });
 
-    let lastCheatTime = 0;
+    let tabLeftTime = 0; // Timestamp when user left the tab
+    const CHEAT_THRESHOLD_MS = 3000; // 5 seconds threshold
     const cheatWarning = document.getElementById('cheat-warning');
     const cheatCounter = document.getElementById('cheat-count-display');
 
@@ -261,25 +262,43 @@ if (isset($_SESSION['student_id']) && $contestName) {
         if (cheatCounter) cheatCounter.innerText = cheatCount;
     }
 
-    function handleCheat() {
-        if (!isAntiCheatEnabled || isNavigating) return; // Only process if enabled and NOT during navigation
+    function handleTabLeave() {
+        if (!isAntiCheatEnabled || isNavigating) return;
+        if (tabLeftTime === 0) {
+            tabLeftTime = Date.now();
+        }
+    }
 
-        const now = Date.now();
-        if (now - lastCheatTime < 1000) return; 
-        lastCheatTime = now;
-        
-        cheatCount++;
-        localStorage.setItem(LS_KEY, cheatCount);
-        if (cheatWarning) cheatWarning.classList.remove('hidden');
-        if (cheatCounter) cheatCounter.innerText = cheatCount;
+    function handleTabReturn() {
+        isNavigating = false;
+        if (!isAntiCheatEnabled || tabLeftTime === 0) {
+            tabLeftTime = 0;
+            return;
+        }
+        const elapsed = Date.now() - tabLeftTime;
+        tabLeftTime = 0;
+        if (elapsed >= CHEAT_THRESHOLD_MS) {
+            cheatCount++;
+            localStorage.setItem(LS_KEY, cheatCount);
+            if (cheatWarning) cheatWarning.classList.remove('hidden');
+            if (cheatCounter) cheatCounter.innerText = cheatCount;
+        }
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) handleCheat();
+        if (document.hidden) {
+            handleTabLeave();
+        } else {
+            handleTabReturn();
+        }
     });
 
     window.addEventListener('blur', () => {
-        handleCheat();
+        handleTabLeave();
+    });
+
+    window.addEventListener('focus', () => {
+        handleTabReturn();
     });
 
     // --- 1. VARIABLES FROM PHP ---
@@ -409,7 +428,7 @@ if (isset($_SESSION['student_id']) && $contestName) {
             }
         }
         // 2. Built-in check
-        const forbiddenBuiltins = code.match(/\b(sum|min|max|sort|lambda|set|replace)\s*\(/);
+        const forbiddenBuiltins = code.match(/\b(sum|count|min|max|sort|lambda|set|replace)\s*\(/);
         if (forbiddenBuiltins) {
             return `Error: Usage of built-in function '${forbiddenBuiltins[1]}()' is not allowed. Please implement the logic manually.`;
         }
@@ -464,13 +483,21 @@ if (isset($_SESSION['student_id']) && $contestName) {
     function runAndSubmit() {
         var orig_studentCode = editor.getValue();
         var studentCode = editor.getValue();
-        
+        fullOutputBuffer = ""; // Reset output buffer before new execution
+
+        var btn = document.getElementById("btn-submit");
+        var originalText = btn.innerHTML;
+        btn.innerHTML = "Submitting...";
+        btn.disabled = true;
+
         var error = validateCode(studentCode);
         if (error) {
             var mypre = document.getElementById("terminal-container");
             mypre.innerHTML = `<div class="skulpt-fail">${error}</div>`;
             saveFileSilently(orig_studentCode);
             submitResult(orig_studentCode, "\nCompile Error\nRuntime Error: " + error);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
             return;
         }
         
