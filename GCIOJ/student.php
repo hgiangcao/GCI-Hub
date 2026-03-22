@@ -35,6 +35,13 @@ class student {
         return $stmt->execute([$name, $english_name, $class, $password, $id]);
     }
 
+    // Update Avatar
+    public static function updateAvatar($id, $avatar_img) {
+        $sql = "UPDATE student SET avatar_img=? WHERE id=?";
+        $stmt = DB::connect()->prepare($sql);
+        return $stmt->execute([$avatar_img, $id]);
+    }
+
     // Delete
     public static function delete($id) {
         $stmt = DB::connect()->prepare("DELETE FROM student WHERE id = ?");

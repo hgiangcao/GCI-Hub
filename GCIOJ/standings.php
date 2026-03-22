@@ -1,4 +1,6 @@
 <?php
+session_start();
+require_once 'auth.php';
 include_once('db.php');
 // require_once 'check_admin.php';
 
@@ -106,6 +108,7 @@ function getProblemLetter($index) {
     <meta charset="UTF-8">
     <title>Standings - <?= htmlspecialchars($contest['name']) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -113,7 +116,7 @@ function getProblemLetter($index) {
                 extend: {
                     colors: {
                         dark: { bg: '#1a1a1a', surface: '#282828', hover: '#3e3e3e', text: '#eff1f6', muted: '#9ca3af' },
-                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444' }
+                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444', yellow: '#ffc01e', blue: '#008BFF' }
                     },
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['Roboto Mono', 'monospace'] }
                 }
@@ -136,11 +139,22 @@ function getProblemLetter($index) {
         <div class="bg-dark-surface border border-gray-700 rounded-lg p-6 mb-8 shadow-lg">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-white mb-2">Standings: <?= htmlspecialchars($contest['name']) ?></h1>
-                    <p class="text-dark-muted text-sm">Course: <span class="text-brand-orange"><?= htmlspecialchars($contest['course']) ?></span></p>
+                    <h1 class="text-3xl font-bold text-white mb-2">Standings: <?= htmlspecialchars($contest['name']) ?> - <span ><?= htmlspecialchars($contest['course']) ?></h1>
+                
+                    <p class="mt-4 flex flex-wrap gap-4 text-sm font-bold">
+                  <a href="standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>" class="text-brand-orange hover:underline decoration-2 underline-offset-4"><i class="fas fa-list-ol mr-1"></i>Standings</a>
+                  <a href="animation_standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>" class="text-brand-blue hover:underline decoration-2 underline-offset-4"><i class="fa-solid fa-bolt-lightning"></i>Funny</a>
+                  <?php
+                    if (isset($_SESSION['student_id']) && $_SESSION['student_id'] == 'chgiang') {
+                        echo "<a href='timeline.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-yellow hover:underline decoration-2 underline-offset-4'><i class='fas fa-history mr-1'></i>Timeline</a>";
+                        echo "<a href='tracking_behaviour.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-green hover:underline decoration-2 underline-offset-4'><i class='fas fa-chart-line mr-1'></i>Tracking</a>";
+                        
+                    }
+                    ?>
+                </p>
                 </div>
                 <div class="flex gap-2">
-                    <a href="standing_animation.php?contestID=<?= $contestId ?>" 
+                    <a href="animation_standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>" 
                        class="px-4 py-2 bg-brand-green hover:bg-green-600 text-white rounded border border-green-700 transition text-sm font-bold flex items-center gap-2">
                         <i class="fas fa-gamepad"></i> Visual Standings
                     </a>
@@ -172,12 +186,20 @@ function getProblemLetter($index) {
                     $rank = 1;
                     foreach ($students as $s):
                         $stats = $rankData[$s['id']] ?? ['solved' => 0, 'total_sub' => 0];
+                        $isMe = (isset($_SESSION['student_id']) && $_SESSION['student_id'] == $s['student_id']);
                     ?>
                         <tr class="hover:bg-dark-hover transition">
                             <td class="px-4 py-3 text-center text-dark-muted font-mono"><?= $rank++ ?></td>
                             <td class="px-4 py-3">
-                                <div class="font-bold text-white"><?= htmlspecialchars($s['student_id']) ?></div>
-                            </td>
+                                 <?php if ($isMe): ?>
+                                        <div class="font-bold text-brand-orange flex items-center gap-2">
+                                            <i class="fas fa-user-circle"></i>
+                                            <?= htmlspecialchars($s['student_id']) ?> (You)
+                               </div>
+                            <?php else: ?>
+                             <div class="text-dark-muted italic">Student <?= $rank - 1 ?></div>
+                         <?php endif; ?>
+                        </td>
                             <td class="px-4 py-3 text-center font-bold text-white border-r border-gray-700 bg-gray-800/20">
                                 <?= $stats['solved'] ?>
                             </td>

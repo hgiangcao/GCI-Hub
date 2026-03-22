@@ -55,6 +55,7 @@ $totalPct = ($globalTotal > 0) ? ($totalSolved / $globalTotal) * 100 : 0;
 
 // Helper for Time Ago
 function time_elapsed_string($datetime) {
+    if (empty($datetime)) return "No data";
     $now = new DateTime;
     $ago = new DateTime($datetime);
     $diff = $now->diff($ago);
@@ -63,6 +64,21 @@ function time_elapsed_string($datetime) {
     if ($diff->i > 0) return $diff->i . 'm ago';
     return 'Just now';
 }
+
+// Handle Avatar Update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
+    $newAvatar = $_POST['update_avatar'];
+    if (file_exists("avt_img/" . $newAvatar)) {
+        if (Student::updateAvatar($student['id'], $newAvatar)) {
+            $_SESSION['avatar_img'] = $newAvatar;
+            $student['avatar_img'] = $newAvatar; // Update local variable to show change immediately
+        }
+    }
+}
+
+// Load Avatars
+$avatars = glob("avt_img/*.png");
+natsort($avatars);
 ?>
 
 <!DOCTYPE html>
@@ -85,6 +101,29 @@ function time_elapsed_string($datetime) {
             }
         }
     </script>
+    <style>
+        .avatar-option {
+            width: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 6px;
+            border: 2px solid transparent;
+
+            z-index: -1;
+        }
+        .avatar-option:hover {
+            transform: scale(1.8);
+            z-index: 50;
+            background: lightgray;
+            border-color: #ffa116;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        .avatar-option.selected {
+            border-color: #ffa116;
+            z-index: 50;
+            background: rgba(255, 161, 22, 0.1);
+        }
+    </style>
 </head>
 <body class="bg-dark-bg text-dark-text font-sans min-h-screen flex flex-col">
 
@@ -96,9 +135,12 @@ function time_elapsed_string($datetime) {
 
             <div class="bg-dark-surface p-6 rounded-lg border border-gray-700 h-fit shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                    <div class="w-20 h-20 rounded-lg bg-gray-700 flex items-center justify-center text-3xl font-bold text-gray-400 border border-gray-600">
-                      
-                         <?= htmlspecialchars(mb_substr($student['name'], 0, 1, "UTF-8")) ?>
+                    <div class="w-20 h-20 rounded-lg bg-gray-700 flex items-center justify-center text-3xl font-bold text-gray-400 border border-gray-600 overflow-hidden">
+                        <?php if(!empty($student['avatar_img']) && file_exists("avt_img/" . $student['avatar_img'])): ?>
+                            <img src="avt_img/<?= htmlspecialchars($student['avatar_img']) ?>" alt="Avatar" class="h-full w-full object-cover">
+                        <?php else: ?>
+                            <?= htmlspecialchars(mb_substr($student['name'] ?? 'U', 0, 1, "UTF-8")) ?>
+                        <?php endif; ?>
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-white"><?= htmlspecialchars($student['student_id']) ?></h2>
@@ -172,47 +214,28 @@ function time_elapsed_string($datetime) {
                     </div>
                 </div>
 
+
+                <?php if (isset($_SESSION['student_id']) && $_SESSION['student_id'] == $student['student_id']): ?>
                 <div class="bg-dark-surface p-6 rounded-lg border border-gray-700 shadow-lg">
-                    <h3 class="font-bold text-dark-muted uppercase text-xs mb-4">Recent Submissions</h3>
-                    <div class="space-y-0">
-                        <?php if (count($recentSubs) > 0): ?>
-                            <?php foreach ($recentSubs as $sub):
-                                // Determine color/text based on 'status' (Matches submit.php values)
-                                $statusLower = strtolower($sub['status']);
-                                
-                                if (strpos($statusLower, 'accepted') !== false) {
-                                    $statusColor = 'text-brand-green';
-                                } elseif (strpos($statusLower, 'pass') !== false) {
-                                    $statusColor = 'text-brand-green';
-                                } elseif (strpos($statusLower, 'wrong') !== false) {
-                                    $statusColor = 'text-brand-red';
-                                } elseif (strpos($statusLower, 'compile') !== false) {
-                                    $statusColor = 'text-brand-yellow';
-                                } else {
-                                    $statusColor = 'text-gray-400';
-                                }
-                                
-                                $statusText = ucfirst($sub['status']);
+                    <h3 class="font-bold text-white uppercase mb-4 text-center">Change Avatar</h3>
+                    <form method="POST" id="avatarForm">
+                        <input type="hidden" name="update_avatar" id="avatarInput">
+                        <div class="grid grid-cols-10 gap-2">
+                            <?php foreach ($avatars as $path): 
+                                $file = basename($path);
+                                $isSelected = $student['avatar_img'] === $file;
                             ?>
-                            <div class="flex justify-between items-center text-sm border-b border-gray-700 py-3 last:border-0 hover:bg-dark-hover px-2 -mx-2 rounded transition">
-                                <a href="solve_problem.php?code=<?= $sub['code'] ?>" class="font-medium text-white hover:text-brand-orange transition">
-                                    <?= htmlspecialchars($sub['title']) ?>
-                                </a>
-                                <div class="flex items-center gap-4">
-                                    <span class="text-dark-muted text-xs hidden sm:block">
-                                        <?= time_elapsed_string($sub['created_at']) ?>
-                                    </span>
-                                    <span class="<?= $statusColor ?> font-bold text-xs w-28 text-right">
-                                        <?= $statusText ?>
-                                    </span>
+                                <div class="relative group">
+                                    <img src="avt_img/<?= htmlspecialchars($file) ?>" 
+                                         class="avatar-option <?= $isSelected ? 'selected' : '' ?>"
+                                         onclick="document.getElementById('avatarInput').value='<?= htmlspecialchars($file) ?>'; document.getElementById('avatarForm').submit();"
+                                         title="Click to select">
                                 </div>
-                            </div>
                             <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="text-dark-muted text-sm py-4 text-center">No submissions yet.</div>
-                        <?php endif; ?>
-                    </div>
+                        </div>
+                    </form>
                 </div>
+                <?php endif; ?>
 
             </div>
         </div>

@@ -164,6 +164,7 @@ $students = Student::getAll();
                                     <th class="px-6 py-4">Student ID</th>
                                     <th class="px-6 py-4">Name</th>
                                     <th class="px-6 py-4">Class</th>
+                                    <th class="px-6 py-4">****</th>
                                     <th class="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -174,7 +175,15 @@ $students = Student::getAll();
                                         <td class="px-6 py-4 text-dark-muted">#<?= htmlspecialchars($stu['id'] ?? '') ?></td>
                                         <td class="px-6 py-4 font-mono text-brand-orange"><?= htmlspecialchars($stu['student_id'] ?? '') ?></td>
                                         <td class="px-6 py-4 font-medium text-white"><?= htmlspecialchars($stu['username'] ?? $stu['name'] ?? '') ?></td>
-                                        <td class="px-6 py-4 text-gray-400"><?= htmlspecialchars($stu['class'] ?? '') ?></td>
+                                        <td class="px-6 py-4 text-gray-400"><?= htmlspecialchars($stu['class'] ?? '') ?></td><td class="px-6 py-4 font-mono text-sm relative group cursor-grab">
+        <span class="hidden group-hover:inline text-brand-orange">
+            <?= htmlspecialchars($stu['password'] ?? '') ?>
+        </span>
+        
+        <span class="inline group-hover:hidden text-gray-600 tracking-widest">
+            •••••
+        </span>
+    </td>
                                         <td class="px-6 py-4 text-right space-x-2">
                                             <a href="student_management.php?edit_id=<?= urlencode($stu['id']) ?>" class="text-brand-orange hover:text-white transition">Edit</a>
 

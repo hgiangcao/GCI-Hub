@@ -26,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['student_id'] = $user['student_id']; // U123...
         $_SESSION['name'] = $user['name']; // Name
         $_SESSION['role'] = 'student'; // Default role
+        $_SESSION['avatar_img'] = $user['avatar_img']; // Avatar image
 
         if ($student_id =='chgiang')
             $_SESSION['role'] = 'admin'; // Default role
@@ -126,6 +127,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </main>
 
-    <?= include 'footer.php' ?>
+    <?php include_once 'footer.php'; ?>
 </body>
 </html>

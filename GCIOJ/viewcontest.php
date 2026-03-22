@@ -12,6 +12,10 @@ if (!isset($_GET['name'])) {
 
 $contestName = urldecode($_GET['name']);
 $courseName = urldecode($_GET['course']);
+if ($courseName === 'PZ_0') {
+    header("Location: practice.php");
+    exit();
+}
 
 
 // A. Fetch the Contest Details first (Needed for ID, Times, Active status)
@@ -74,7 +78,7 @@ function getDifficultyColor($level) {
                 extend: {
                     colors: {
                         dark: { bg: '#1a1a1a', surface: '#282828', hover: '#3e3e3e', text: '#eff1f6', muted: '#9ca3af' },
-                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444', yellow: '#ffc01e' }
+                        brand: { orange: '#ffa116', green: '#2cbb5d', red: '#ef4444', yellow: '#ffc01e', blue: '#008BFF' }
                     },
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['Roboto Mono', 'monospace'] }
                 }
@@ -111,11 +115,12 @@ function getDifficultyColor($level) {
                     </p>
                  <p class="mt-4 flex flex-wrap gap-4 text-sm font-bold">
                   <a href="standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>" class="text-brand-orange hover:underline decoration-2 underline-offset-4"><i class="fas fa-list-ol mr-1"></i>Standings</a>
+                  <a href="animation_standings.php?contestID=<?= $contest['id'] ?>&course=<?= $courseName ?>" class="text-brand-blue hover:underline decoration-2 underline-offset-4"><i class="fa-solid fa-bolt-lightning"></i>Funny</a>
                   <?php
                     if (isset($_SESSION['student_id']) && $_SESSION['student_id'] == 'chgiang') {
-                        echo "<a href='timeline.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-blue hover:underline decoration-2 underline-offset-4'><i class='fas fa-history mr-1'></i>Timeline</a>";
+                        echo "<a href='timeline.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-yellow hover:underline decoration-2 underline-offset-4'><i class='fas fa-history mr-1'></i>Timeline</a>";
                         echo "<a href='tracking_behaviour.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-green hover:underline decoration-2 underline-offset-4'><i class='fas fa-chart-line mr-1'></i>Tracking</a>";
-                        echo "<a href='animation_standings.php?contestID={$contest['id']}&course={$courseName}' class='text-brand-orange hover:underline decoration-2 underline-offset-4'><i class='fas fa-play mr-1'></i>Animation</a>";
+                        
                     }
                     ?>
                 </p>
